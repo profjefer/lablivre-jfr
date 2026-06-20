@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wiki LabLivre v4.1.7 — Documentação e Manual do Usuário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff88;
+    --cyan: #00d4ff;
+    --amber: #ffb347;
+    --purple: #b794f4;
+    --red: #ff6b6b;
+    --bg: #080c10;
+    --bg-card: #0d1117;
+    --bg-soft: #111820;
+    --border: rgba(0,255,136,0.15);
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; line-height:1.65; padding:40px; }
+  .container { max-width:1100px; margin:0 auto; }
+
+  header { border-bottom:2px solid var(--green); padding-bottom:24px; margin-bottom:32px; }
+  h1 { font-family:var(--display); font-size:3rem; color:#fff; line-height:1.1; }
+  h1 span { color:var(--green); }
+  .subtitle { color:var(--text-dim); margin-top:8px; }
+  .version-badge { display:inline-block; padding:4px 12px; background:rgba(0,255,136,0.08); border:1px solid var(--green); border-radius:20px; color:var(--green); font-family:var(--mono); font-size:13px; margin-top:14px; letter-spacing:0.04em; }
+
+  h2 { font-family:var(--display); color:var(--cyan); margin:48px 0 18px; font-size:1.8rem; border-left:4px solid var(--green); padding-left:14px; }
+  h3 { color:var(--green); margin-top:28px; font-size:1.15rem; text-transform:uppercase; letter-spacing:1px; }
+  h4 { color:#fff; margin-top:18px; font-size:1.05rem; }
+  p { margin:12px 0; }
+  b, strong { color:var(--cyan); }
+
+  /* TOC */
+  .toc { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px 28px; margin-bottom:36px; }
+  .toc h3 { color:var(--amber); margin-top:0; font-size:14px; }
+  .toc ol { margin:14px 0 0 18px; columns:2; column-gap:32px; }
+  .toc li { margin:5px 0; color:var(--text-dim); }
+  .toc a { color:var(--text); text-decoration:none; border-bottom:1px dashed transparent; }
+  .toc a:hover { color:var(--green); border-bottom-color:var(--green); }
+
+  /* CODE */
+  pre, code { font-family:var(--mono); }
+  pre { background:#020408; border:1px solid rgba(0,255,136,0.12); border-radius:8px; padding:16px 20px; margin:14px 0; overflow-x:auto; font-size:14px; line-height:1.7; color:#a8d8a8; }
+  code { background:rgba(0,255,136,0.07); color:var(--green); padding:2px 6px; border-radius:4px; font-size:0.92em; }
+  pre code { background:none; padding:0; color:inherit; }
+  .kw  { color:var(--cyan); }
+  .str { color:var(--amber); }
+  .cmt { color:#4b5563; }
+  .fn  { color:var(--green); }
+
+  /* CARDS / BOXES */
+  .box { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:18px 24px; margin:18px 0; }
+  .box.info    { border-left:4px solid var(--cyan); }
+  .box.warn    { border-left:4px solid var(--amber); background:rgba(255,179,71,0.04); }
+  .box.danger  { border-left:4px solid var(--red); background:rgba(255,107,107,0.04); }
+  .box.success { border-left:4px solid var(--green); background:rgba(0,255,136,0.04); }
+  .box.new     { border-left:4px solid var(--purple); background:rgba(183,148,244,0.04); }
+  .box-title { font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .box.info    .box-title { color:var(--cyan); }
+  .box.warn    .box-title { color:var(--amber); }
+  .box.danger  .box-title { color:var(--red); }
+  .box.success .box-title { color:var(--green); }
+  .box.new     .box-title { color:var(--purple); }
+
+  /* TABLE */
+  table { width:100%; border-collapse:collapse; margin:16px 0; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  th { background:rgba(0,255,136,0.08); color:var(--green); padding:10px 14px; text-align:left; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; }
+  td { padding:10px 14px; border-top:1px solid var(--border); font-size:14px; }
+  td code { font-size:13px; }
+
+  /* LISTS */
+  ul, ol { margin:10px 0 14px 22px; }
+  li { margin:6px 0; }
+  li b { color:var(--cyan); }
+
+  /* TAGS */
+  .tag-new { display:inline-block; font-size:10px; padding:2px 6px; background:var(--purple); color:#000; border-radius:3px; font-weight:700; letter-spacing:0.05em; margin-left:6px; vertical-align:middle; }
+  .tag-changed { display:inline-block; font-size:10px; padding:2px 6px; background:var(--amber); color:#000; border-radius:3px; font-weight:700; letter-spacing:0.05em; margin-left:6px; vertical-align:middle; }
+
+  footer { margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-dim); font-size:13px; text-align:center; }
+  footer a { color:var(--green); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🐧 Wiki <span>LabLivre</span></h1>
+  <div class="subtitle">Documentação técnica e manual do usuário · Orquestração de laboratórios GNU/Linux</div>
+  <div class="version-badge">v4.1.7 · 2026-06</div>
+</header>
+
+<!-- ─────────── ÍNDICE ─────────── -->
+<div class="toc">
+  <h3>📑 Índice</h3>
+  <ol>
+    <li><a href="#novidades">✨ Novidades v4.1.7</a></li>
+    <li><a href="#s1">Visão Geral e Arquitetura</a></li>
+    <li><a href="#s2">Instalação</a></li>
+    <li><a href="#s3">Estrutura de Pastas</a></li>
+    <li><a href="#s4">Arquivos de Configuração</a></li>
+    <li><a href="#s5">Requisitos das Máquinas Clientes</a></li>
+    <li><a href="#s6">Guia do Dia a Dia (menu.sh / xmenu.sh)</a></li>
+    <li><a href="#s7">Dashboards Web e Observabilidade</a></li>
+    <li><a href="#s8">Auditoria Estruturada (JSONL)</a></li>
+    <li><a href="#s9">Segurança: Senha vs Chave SSH</a></li>
+    <li><a href="#s10">Agendamentos Automáticos (Cron)</a></li>
+    <li><a href="#s10b">Snapshot Diário e Mapa de Calor</a></li>
+    <li><a href="#s11">Comandos Core e Técnicas Internas</a></li>
+    <li><a href="#s12">Qualidade: Testes, Dry-run, .deb</a></li>
+    <li><a href="#s13">Troubleshooting</a></li>
+    <li><a href="#s14">Roadmap e Trabalhos Futuros</a></li>
+  </ol>
+</div>
+
+<!-- ─────────── NOVIDADES v4.1.7 ─────────── -->
+<h2 id="novidades">✨ Novidades da versão 4.1.7</h2>
+
+<div class="box new">
+  <div class="box-title">🎯 O que mudou</div>
+  <p>Esta versão é um <b>release de correções e melhorias</b> baseado em feedback de uso em produção em múltiplas máquinas. Foco em estabilidade da instalação e novas visualizações de uso do laboratório.</p>
+</div>
+
+<h3>🔧 Correções principais</h3>
+<table>
+  <tr><th>Problema relatado</th><th>Correção</th></tr>
+  <tr><td>Faltava <code>xmenu.sh</code> na raiz do projeto</td><td>Criado proxy na raiz que delega para <code>xmodulos/xmenu.sh</code></td></tr>
+  <tr><td>Wiki estava na raiz, não em <code>docs/</code></td><td>Movido definitivamente para <code>docs/wiki_lablivre.html</code></td></tr>
+  <tr><td>Dependências não instaladas em outras máquinas</td><td>Criado <code>_instalar_deps.sh</code> idempotente que detecta o que falta</td></tr>
+  <tr><td><code>build_deb.sh</code> gerava .deb com erro de instalação</td><td>Substituído <code>rsync</code> por <code>tar</code>; reescrito <code>postinst</code> sem <code>useradd -r</code> problemático</td></tr>
+  <tr><td>Servidor web não conseguia ler <code>/opt/lablivre/web/</code></td><td>Provisionar agora aplica <code>chmod 755</code> no caminho e <code>chmod 644</code> nos arquivos</td></tr>
+  <tr><td>Teste de conectividade marcava a própria máquina como OFFLINE</td><td>Agora detecta <i>ESTA MÁQUINA</i> e considera ONLINE sem ping</td></tr>
+  <tr><td>Inventário gráfico exibia 0 sucessos no popup final</td><td>Stats gravadas em arquivo (não em variável que se perde no subshell)</td></tr>
+  <tr><td><code>api.json</code> não atualizava em algumas instalações</td><td>Verificação de permissões + diagnóstico verboso em <code>atualizar_ips.sh</code></td></tr>
+  <tr><td>Barras de progresso estourando o cabeçalho do xmenu</td><td>Largura fixa de 30 caracteres em vez de cálculo proporcional</td></tr>
+</table>
+
+<h3>🆕 Novidades</h3>
+<ul>
+  <li><b>📋 Inventário HTML estilizado</b> — gerado automaticamente em <code>web/inventario.html</code> tanto pelo modo texto quanto gráfico, com cards de estatísticas e tabela detalhada</li>
+  <li><b>🔥 Mapa de Calor</b> — novo dashboard que mostra quais máquinas são mais usadas. Cinco níveis de intensidade (Hot / Warm / Mild / Cold / Frozen), atualizado a cada mapeamento da rede</li>
+  <li><b>🌐 Portal Web no menu</b> — opção 13 (texto) e 15 (gráfico) abrem o portal <code>http://localhost:8080/</code> automaticamente, subindo o servidor se necessário</li>
+  <li><b>Novos cards no portal</b> — index.html agora tem Inventário e Mapa de Calor</li>
+  <li><b>Documentação do <code>snapshot_diario.sh</code></b> em <code>docs/snapshot_diario.md</code></li>
+</ul>
+
+<div class="box info">
+  <div class="box-title">📦 Atualizando para a versão 4.1.7</div>
+  <p>Basta substituir os arquivos pelos da nova versão (ou instalar o novo <code>.deb</code>) e rodar:</p>
+  <pre>cd /opt/lablivre &amp;&amp; bash _provisionar.sh</pre>
+  <p>Isso reaplica permissões (incluindo o fix do <code>web/</code>), atualiza o cron com a nova rotina do mapa de calor, e reinicia o serviço web.</p>
+</div>
+
+<!-- ─────────── SEÇÃO 1 ─────────── -->
+<h2 id="s1">1. Visão Geral e Arquitetura</h2>
+
+<p>O <b>LabLivre</b> é uma suíte de automação em Shell Script para gestão centralizada de laboratórios GNU/Linux. Permite que um único nó (a máquina do professor) orquestre dezenas de terminais clientes via SSH — sem instalar nenhum software nas máquinas dos alunos.</p>
+
+<div class="box success">
+  <div class="box-title">🎯 Princípios de design</div>
+  <ul>
+    <li><b>Stateless / agentless:</b> zero software instalado nos clientes</li>
+    <li><b>Fileless execution:</b> comandos rodam na RAM remota, sem cópia de arquivos</li>
+    <li><b>Zero-Config:</b> auto-detecta a sub-rede ativa em qualquer laboratório</li>
+    <li><b>DRY:</b> credenciais e parâmetros centralizados em <code>configs/lablivre.conf</code></li>
+    <li><b>Observabilidade:</b> 5 dashboards web reativos consumindo um <code>api.json</code> único</li>
+    <li><b>Rastreabilidade:</b> toda ação destrutiva registrada em JSON estruturado</li>
+  </ul>
+</div>
+
+<h3>Componentes principais</h3>
+<table>
+  <tr><th>Componente</th><th>Função</th></tr>
+  <tr><td><code>menu.sh</code></td><td>Interface texto (orquestrador principal)</td></tr>
+  <tr><td><code>xmenu.sh</code></td><td>Interface gráfica via Zenity</td></tr>
+  <tr><td><code>configs/lablivre.conf</code></td><td>Configuração central (chmod 600)</td></tr>
+  <tr><td><code>configs/macs.txt</code></td><td>Âncora de hardware (MAC → nome)</td></tr>
+  <tr><td><code>ips_atuais.txt</code></td><td>Mapa dinâmico MAC ↔ IP (gerado)</td></tr>
+  <tr><td><code>web/api.json</code></td><td>Estado consolidado consumido pelos dashboards</td></tr>
+  <tr><td><code>logs/auditoria.jsonl</code></td><td>Trilha de auditoria estruturada</td></tr>
+  <tr><td><code>lablivre-web.service</code></td><td>Serviço systemd servindo a porta 8080</td></tr>
+</table>
+
+<!-- ─────────── SEÇÃO 2 ─────────── -->
+<h2 id="s2">2. Instalação</h2>
+
+<h3>Opção A — Via pacote .deb (recomendado)</h3>
+<p>A forma mais profissional, ideal para implantação em múltiplos laboratórios:</p>
+<pre><span class="fn">sudo</span> apt install ./lablivre_4.1.7_all.deb</pre>
+<p>O pacote cria o usuário do sistema, instala dependências declaradas, configura permissões, ativa o serviço web no systemd e cria o symlink global <code>/usr/local/bin/lablivre</code>.</p>
+
+<h3>Opção B — Via Git</h3>
+<pre><span class="fn">git</span> clone https://github.com/USUARIO/lablivre.git /opt/lablivre
+<span class="kw">cd</span> /opt/lablivre
+<span class="fn">bash</span> configurar_lab.sh</pre>
+
+<h3>Opção C — Via tarball</h3>
+<pre><span class="fn">tar</span> -xzf lablivre-4.1.7.tar.gz
+<span class="fn">sudo</span> mv lablivre /opt/
+<span class="kw">cd</span> /opt/lablivre
+<span class="fn">bash</span> configurar_lab.sh</pre>
+
+<h3>Configuração inicial</h3>
+<p>O script <code>configurar_lab.sh</code> é interativo e cuida de:</p>
+<ul>
+  <li>Instalação de dependências (<code>nmap, sshpass, zenity, wakeonlan, ethtool, dmidecode</code>...)</li>
+  <li>Criação da estrutura de diretórios (<code>configs/</code>, <code>logs/</code>, <code>web/</code>)</li>
+  <li>Coleta de credenciais SSH dos clientes (usuário e senha)</li>
+  <li>Definição do nome do laboratório (<code>LAB_NOME</code>) e da pasta de material</li>
+  <li>Aplicação de permissões restritivas (<code>chmod 600</code> no conf, <code>700</code> em <code>configs/</code> e <code>logs/</code>)</li>
+  <li>Provisionamento das tarefas no <code>cron</code> e do serviço <code>systemd</code> do servidor web</li>
+</ul>
+
+<div class="box warn">
+  <div class="box-title">⚠ Após instalar</div>
+  <p>Preencha o arquivo <code>configs/macs.txt</code> com os MACs e nomes amigáveis das máquinas do laboratório (uma linha por máquina). Depois execute a opção <b>1 — Mapear Rede</b> do menu para gerar o <code>ips_atuais.txt</code>.</p>
+</div>
+
+<h3>Atualizar para uma nova versão</h3>
+<p>Para atualizar, <b>não é preciso remover</b> a versão anterior. Basta instalar o novo <code>.deb</code> por cima — o <code>dpkg</code> faz o upgrade preservando suas configurações (<code>lablivre.conf</code>, <code>macs.txt</code>) e logs:</p>
+<pre><span class="fn">sudo</span> apt install ./lablivre_4.1.7_all.deb</pre>
+
+<p>Se instalou via Git ou tarball, atualize com:</p>
+<pre><span class="cmt"># Via Git</span>
+<span class="kw">cd</span> /opt/lablivre &amp;&amp; <span class="fn">git</span> pull &amp;&amp; <span class="fn">bash</span> _provisionar.sh
+
+<span class="cmt"># Via tarball (extraia por cima, sem apagar configs/)</span>
+<span class="fn">tar</span> -xzf lablivre-4.1.7.tar.gz
+<span class="fn">sudo</span> cp -r lablivre-4.1.7/* /opt/lablivre/
+<span class="kw">cd</span> /opt/lablivre &amp;&amp; <span class="fn">bash</span> _provisionar.sh</pre>
+
+<h3>Remover o LabLivre</h3>
+<table>
+  <tr><th>Comando</th><th>O que faz</th></tr>
+  <tr><td><code>sudo apt remove lablivre</code></td><td>Remove o programa, <b>mantém</b> configs e logs em <code>/opt/lablivre/</code></td></tr>
+  <tr><td><code>sudo apt purge lablivre</code></td><td>Remove <b>tudo</b>, incluindo configurações, logs e a pasta <code>/opt/lablivre/</code></td></tr>
+</table>
+
+<p>Tanto <code>remove</code> quanto <code>purge</code> já cuidam de:</p>
+<ul>
+  <li>Apagar os atalhos <code>lablivre</code> e <code>lablivre-gui</code> de <code>/usr/local/bin/</code></li>
+  <li>Desativar e remover o serviço <code>lablivre-web.service</code> do systemd</li>
+  <li>Remover as tarefas do LabLivre do <code>cron</code> do usuário operador</li>
+</ul>
+
+<div class="box info">
+  <div class="box-title">💡 Limpeza completa garantida</div>
+  <p>Se usou <code>apt remove</code> (não purge) e depois quiser apagar os dados restantes:</p>
+  <pre><span class="fn">sudo</span> apt purge lablivre
+<span class="fn">sudo</span> rm -rf /opt/lablivre</pre>
+</div>
+
+<div class="box new">
+  <div class="box-title">🔁 Reinstalar do zero</div>
+  <p>Para uma instalação totalmente limpa (descartando configurações antigas):</p>
+  <pre><span class="fn">sudo</span> apt purge lablivre
+<span class="fn">sudo</span> rm -rf /opt/lablivre
+<span class="fn">sudo</span> apt install ./lablivre_4.1.7_all.deb</pre>
+</div>
+
+<!-- ─────────── SEÇÃO 3 ─────────── -->
+<h2 id="s3">3. Estrutura de Pastas</h2>
+
+<pre>/opt/lablivre/
+├── menu.sh                         <span class="cmt"># menu texto (auto-detecta local)</span>
+├── xmenu.sh                        <span class="cmt"># menu gráfico Zenity</span>
+├── configurar_lab.sh               <span class="cmt"># wizard de instalação</span>
+├── _provisionar.sh                 <span class="cmt"># permissões, cron, systemd</span>
+├── VERSION                         <span class="cmt"># 4.1.7</span>
+├── CHANGELOG.md
+│
+├── configs/                        <span class="cmt"># 🔒 chmod 700</span>
+│   ├── lablivre.conf               <span class="cmt"># 🔒 chmod 600 (credenciais)</span>
+│   ├── macs.txt                    <span class="cmt"># âncora MAC → nome</span>
+│   ├── lablivre_key                <span class="cmt"># chave SSH (se ativado)</span>
+│   ├── .backups/                   <span class="cmt"># backups automáticos do macs.txt</span>
+│   └── i18n/                       <span class="cmt"># pt_BR.conf, en_US.conf</span>
+│
+├── modulos/                        <span class="cmt"># lógica do menu texto</span>
+│   ├── _ssh.sh _log.sh _dryrun.sh _i18n.sh _backup_macs.sh
+│   ├── atualizar_ips.sh modo_prova.sh desligar_labold.sh
+│   ├── distribuir_material.sh manutencao_sistema.sh
+│   ├── coletar_inventario.sh corrigir_quebrados.sh
+│   ├── enviar_mensagem.sh ligar_labold.sh diagnosticar_ssh.sh
+│   ├── ver_auditoria.sh configurar_chave_ssh.sh
+│   ├── gerar_estado.sh gerar_auditoria_json.sh
+│   ├── snapshot_diario.sh exportar_estado_publico.sh
+│   └── desligar_agendado.sh
+│
+├── xmodulos/                       <span class="cmt"># versões gráficas (Zenity)</span>
+│   └── x*.sh
+│
+├── web/                            <span class="cmt"># servido em :8080 via systemd</span>
+│   ├── index.html                  <span class="cmt"># portal com 5 cards</span>
+│   ├── api.json                    <span class="cmt"># fonte única de verdade</span>
+│   ├── auditoria.json
+│   ├── dashboard_operacional.html
+│   ├── dashboard_tv.html
+│   ├── dashboard_prova.html
+│   ├── dashboard_hacker.html
+│   └── dashboard_auditoria.html
+│
+├── logs/                           <span class="cmt"># 🔒 chmod 700</span>
+│   ├── auditoria.jsonl
+│   ├── historico.jsonl
+│   ├── modo_prova.status
+│   ├── macs_desconhecidos.log
+│   └── relatorios .txt
+│
+├── docs/                           <span class="cmt"># 📖 esta wiki + guias</span>
+│   ├── wiki_lablivre.html          <span class="cmt"># ⬅ você está aqui</span>
+│   ├── SEGURANCA.md
+│   └── META_DASHBOARD.md
+│
+├── tests/                          <span class="cmt"># suíte de 58 testes</span>
+│   └── run_tests.sh
+│
+└── packaging/                      <span class="cmt"># construção do .deb</span>
+    ├── build_deb.sh
+    └── debian/</pre>
+
+<!-- ─────────── SEÇÃO 4 ─────────── -->
+<h2 id="s4">4. Arquivos de Configuração</h2>
+
+<h3>configs/lablivre.conf</h3>
+<p>Ponto único de verdade para a configuração do laboratório:</p>
+<pre><span class="kw">LAB_NOME</span>=<span class="str">"old"</span>                          <span class="cmt"># identifica o laboratório</span>
+<span class="kw">LAB_USUARIO</span>=<span class="str">"ufpr"</span>                       <span class="cmt"># usuário SSH dos clientes</span>
+<span class="kw">LAB_SENHA</span>=<span class="str">"***"</span>                          <span class="cmt"># senha (modo fallback)</span>
+<span class="kw">LAB_PASTA_MATERIAL</span>=<span class="str">"envia_material"</span>     <span class="cmt"># origem padrão</span>
+<span class="kw">LAB_IDIOMA</span>=<span class="str">"pt_BR"</span>                        <span class="cmt"># pt_BR | en_US</span>
+<span class="kw">LAB_AUTH_MODE</span>=<span class="str">"senha"</span>                     <span class="cmt"># senha | chave</span></pre>
+
+<div class="box danger">
+  <div class="box-title">🔒 Importante</div>
+  <p>Este arquivo é automaticamente configurado com <code>chmod 600</code>. Nunca o comite num repositório público. Adicione ao <code>.gitignore</code>.</p>
+</div>
+
+<h3>configs/macs.txt</h3>
+<p>Lista mestre de identidades, ancorada nos endereços MAC físicos:</p>
+<pre><span class="cmt"># MAC address      Nome amigável</span>
+18:a9:9b:fe:11:21  pc-frente-01
+18:a9:9b:fe:11:34  pc-frente-02
+74:86:7a:fd:f3:0e  pc-fundo-01
+<span class="cmt"># ...</span></pre>
+
+<h3>Logs gerados automaticamente</h3>
+<table>
+  <tr><th>Arquivo</th><th>Conteúdo</th></tr>
+  <tr><td><code>logs/auditoria.jsonl</code></td><td>Trilha JSON estruturada de ações destrutivas</td></tr>
+  <tr><td><code>logs/historico.jsonl</code></td><td>Snapshot diário (gerado às 23h59)</td></tr>
+  <tr><td><code>logs/modo_prova.status</code></td><td>Estado atual do modo prova (ativo/inativo)</td></tr>
+  <tr><td><code>logs/macs_desconhecidos.log</code></td><td>MACs vistos mas não cadastrados</td></tr>
+  <tr><td><code>logs/inventario_lab.txt</code></td><td>Relatório consolidado do hardware</td></tr>
+  <tr><td><code>logs/cron_*.log</code></td><td>Logs das tarefas agendadas</td></tr>
+</table>
+
+<!-- ─────────── SEÇÃO 5 ─────────── -->
+<h2 id="s5">5. Requisitos das Máquinas Clientes</h2>
+
+<ol>
+  <li><b>Sistema:</b> Ubuntu (testado em 22.04 e 24.04) ou derivado Debian compatível.</li>
+  <li><b>Usuário SSH:</b> um usuário administrativo padronizado em todas as máquinas, com a mesma senha (ou chave SSH equivalente).</li>
+  <li><b>SSH habilitado:</b> daemon <code>sshd</code> ativo e aceitando conexões na porta 22.</li>
+  <li><b>Wake-on-LAN:</b> habilitar na BIOS/UEFI e desativar <i>Deep Sleep Control</i> em desktops corporativos.</li>
+  <li><b>sudo sem senha em comandos específicos</b> (opcional — facilita modo prova e desligamento): adicione ao <code>/etc/sudoers.d/lablivre</code>:</li>
+</ol>
+<pre>ufpr ALL=(ALL) NOPASSWD: /sbin/shutdown, /usr/sbin/iptables, /usr/sbin/dmidecode</pre>
+
+<div class="box info">
+  <div class="box-title">ℹ Sem agente</div>
+  <p>Não é necessário instalar nada além do que o Ubuntu já traz. O LabLivre opera 100% via SSH e ferramentas nativas do sistema.</p>
+</div>
+
+<!-- ─────────── SEÇÃO 6 ─────────── -->
+<h2 id="s6">6. Guia do Dia a Dia (menu.sh / xmenu.sh)</h2>
+
+<p>Ambos os menus oferecem as mesmas funcionalidades — apenas a apresentação muda. Use <code>menu.sh</code> via terminal (mais ágil) ou <code>xmenu.sh</code> para janelas Zenity (mais visual).</p>
+
+<h3>Opções principais</h3>
+<table>
+  <tr><th>#</th><th>Opção</th><th>O que faz</th></tr>
+  <tr><td>1</td><td>📡 Mapear Rede</td><td>Executa nmap, cruza com <code>macs.txt</code>, atualiza <code>ips_atuais.txt</code> e regenera <code>api.json</code></td></tr>
+  <tr><td>2</td><td>📚 Distribuir Material</td><td>Envia via tar-pipe a pasta configurada para todas as máquinas</td></tr>
+  <tr><td>3</td><td>🔒 Modo Prova</td><td>Ativa/desativa bloqueio de internet (iptables) + aviso fullscreen</td></tr>
+  <tr><td>4</td><td>📊 Inventário</td><td>Coleta CPU, RAM, disco, GPU, BIOS, pacotes</td></tr>
+  <tr><td>5</td><td>💬 Enviar Mensagem</td><td>Pop-up gráfico ou broadcast <code>wall</code></td></tr>
+  <tr><td>6</td><td>⚡ Ligar Lab (WoL)</td><td>Dispara Magic Packets</td></tr>
+  <tr><td>7</td><td>🔌 Desligar Lab</td><td>Shutdown remoto (pula o orquestrador)</td></tr>
+  <tr><td>8</td><td>🛠️ Manutenção</td><td>APT update/upgrade/install em todo o lab</td></tr>
+  <tr><td>9</td><td>💊 Vacina APT</td><td>Remove repositórios quebrados (Dell, R)</td></tr>
+  <tr><td>10</td><td>🔍 Diagnosticar SSH</td><td>Testa ping → porta 22 → autenticação em cada cliente</td></tr>
+  <tr><td>11</td><td>📜 Ver Auditoria</td><td>Visualiza <code>auditoria.jsonl</code> com filtros</td></tr>
+  <tr><td>12</td><td>🔐 Configurar Chave SSH</td><td>Migração opcional para autenticação por chave</td></tr>
+  <tr><td>13</td><td>🌐 Abrir Portal Web <span class="tag-new">v4.1.7</span></td><td>Sobe o servidor (se necessário) e abre <code>http://localhost:8080/</code> no navegador</td></tr>
+  <tr><td>99</td><td>⚙️ Configurações</td><td>Re-executa <code>configurar_lab.sh</code></td></tr>
+</table>
+
+<h3>Cabeçalho do menu</h3>
+<p>O cabeçalho mostra dinamicamente:</p>
+<ul>
+  <li><b>Nome do laboratório</b> (<code>LAB_NOME</code>)</li>
+  <li><b>Contagem online / offline / total</b> (do último mapeamento)</li>
+  <li><b>Status do modo prova</b> (vermelho quando ativo, com timestamp)</li>
+  <li><b>Modo de autenticação</b> (🔓 Senha ou 🔐 Chave SSH)</li>
+</ul>
+
+<!-- ─────────── SEÇÃO 7 ─────────── -->
+<h2 id="s7">7. Dashboards Web e Observabilidade</h2>
+
+<p>O LabLivre disponibiliza um servidor web embutido (Python <code>http.server</code> via systemd) na porta <b>8080</b>. Sempre que o sistema mapeia a rede ou registra uma ação, regenera o <code>web/api.json</code> que alimenta cinco dashboards distintos.</p>
+
+<h3>Como acessar</h3>
+<pre><span class="cmt"># Na máquina do professor:</span>
+http://localhost:8080/
+
+<span class="cmt"># De qualquer dispositivo na rede (celular, tablet, outro PC):</span>
+http://&lt;ip-do-orquestrador&gt;:8080/</pre>
+
+<div class="box danger">
+  <div class="box-title">⚠ Sempre via HTTP, nunca file://</div>
+  <p>Abrir os HTMLs diretamente (clicando no arquivo) faz o navegador bloquear o <code>fetch('api.json')</code> por política CORS. Use sempre <code>http://localhost:8080/</code>.</p>
+</div>
+
+<h3>Os 7 dashboards</h3>
+<table>
+  <tr><th>Dashboard</th><th>Propósito</th></tr>
+  <tr><td><b>Operacional</b></td><td>Visão sóbria, editorial. Para o monitor do professor.</td></tr>
+  <tr><td><b>TV Mode</b></td><td>Fullscreen cinematográfico. Para projetor ou TV.</td></tr>
+  <tr><td><b>Modo Prova</b></td><td>Alerta vermelho institucional. Visível durante avaliações.</td></tr>
+  <tr><td><b>Hacker Mode</b></td><td>Estética cyberpunk CRT. Engaja visualmente os alunos.</td></tr>
+  <tr><td><b>Auditoria</b></td><td>Timeline filtrável de eventos. Análise retrospectiva.</td></tr>
+  <tr><td><b>Inventário</b> <span class="tag-new">v4.1.7</span></td><td>Hardware de cada máquina (CPU, RAM, disco, GPU, BIOS) em tabela estilizada.</td></tr>
+  <tr><td><b>Mapa de Calor</b> <span class="tag-new">v4.1.7</span></td><td>Máquinas mais usadas, com 5 níveis de intensidade.</td></tr>
+</table>
+<p>Todos têm <b>auto-refresh de 30 segundos</b> via JavaScript. Mudanças no estado aparecem automaticamente.</p>
+
+<h3>Estrutura do api.json</h3>
+<pre>{
+  <span class="str">"lab"</span>: { <span class="str">"nome"</span>: <span class="str">"old"</span>, <span class="str">"ips_atualizado_em"</span>: <span class="str">"..."</span> },
+  <span class="str">"rede"</span>: {
+    <span class="str">"total"</span>: 18, <span class="str">"online"</span>: 10, <span class="str">"offline"</span>: 8,
+    <span class="str">"interface"</span>: <span class="str">"eno1"</span>, <span class="str">"sub_rede"</span>: <span class="str">"200.236.4.165/25"</span>
+  },
+  <span class="str">"modo_prova"</span>: { <span class="str">"ativo"</span>: false, <span class="str">"desde"</span>: <span class="str">""</span> },
+  <span class="str">"maquinas"</span>: [
+    {
+      <span class="str">"mac"</span>: <span class="str">"18:a9:9b:fe:11:21"</span>,
+      <span class="str">"ip"</span>: <span class="str">"200.236.4.166"</span>,
+      <span class="str">"nome"</span>: <span class="str">"pc-frente-01"</span>,
+      <span class="str">"status"</span>: <span class="str">"online"</span>,
+      <span class="str">"esta_maquina"</span>: false
+    }
+  ],
+  <span class="str">"ultima_atualizacao"</span>: <span class="str">"2026-06-03T22:41:51-03:00"</span>
+}</pre>
+
+<!-- ─────────── SEÇÃO 8 ─────────── -->
+<h2 id="s8">8. Auditoria Estruturada (JSONL) <span class="tag-new">NOVO v4</span></h2>
+
+<p>Toda ação destrutiva — modo prova, distribuição de material, shutdown, manutenção, inventário — gera uma linha em <code>logs/auditoria.jsonl</code> no formato JSON estruturado:</p>
+
+<pre>{<span class="str">"ts"</span>:<span class="str">"2026-06-03T22:30:15"</span>,<span class="str">"usuario"</span>:<span class="str">"ufpr"</span>,
+ <span class="str">"host"</span>:<span class="str">"ufpr-OptiPlex-7010"</span>,<span class="str">"acao"</span>:<span class="str">"modo_prova_ativar"</span>,
+ <span class="str">"detalhes"</span>:{<span class="str">"maquinas_afetadas"</span>:<span class="str">"10"</span>}}</pre>
+
+<h3>Três formas de consultar</h3>
+<ol>
+  <li><b>Menu opção 11</b> — visualizador interativo com filtros por data, tipo de ação e últimas N entradas.</li>
+  <li><b>Dashboard de auditoria</b> — timeline filtrável em <code>http://localhost:8080/dashboard_auditoria.html</code>.</li>
+  <li><b>Snapshot diário</b> — todo dia às 23h59 o sistema consolida métricas em <code>logs/historico.jsonl</code>. Permite análises longitudinais (quantas provas no semestre, dias de maior uso, etc.).</li>
+</ol>
+
+<!-- ─────────── SEÇÃO 9 ─────────── -->
+<h2 id="s9">9. Segurança: Senha vs Chave SSH <span class="tag-new">NOVO v4.1</span></h2>
+
+<div class="box info">
+  <div class="box-title">🔓 Modo Senha (padrão)</div>
+  <p>A senha SSH dos clientes fica em texto puro em <code>configs/lablivre.conf</code>, protegida apenas pelo <code>chmod 600</code>. Usa <code>sshpass</code> em runtime. Funciona em qualquer instalação sem setup prévio nas máquinas — ideal para implantação inicial.</p>
+</div>
+
+<div class="box success">
+  <div class="box-title">🔐 Modo Chave (recomendado)</div>
+  <p>Um par Ed25519 é gerado em <code>configs/lablivre_key</code> e distribuído automaticamente para todas as máquinas via <code>ssh-copy-id</code>. A senha em texto puro deixa de ser usada na operação normal, permanecendo apenas como fallback para máquinas novas.</p>
+  <p><b>Vantagens:</b> zero <code>sshpass</code> em runtime (senha não aparece em <code>ps</code> ou logs do sistema), chave revogável, qualitativamente mais seguro.</p>
+</div>
+
+<h3>Como migrar para modo chave</h3>
+<ol>
+  <li>Garanta que o <code>configs/lablivre.conf</code> está configurado e funcional (modo senha)</li>
+  <li>Execute a opção <b>1 — Mapear Rede</b> para listar máquinas online</li>
+  <li>Execute a opção <b>12 — Configurar Chave SSH</b></li>
+  <li>O script gera, distribui, valida e ativa o modo chave automaticamente</li>
+  <li>O cabeçalho do menu passa a mostrar <code>🔐 Chave SSH</code></li>
+</ol>
+
+<p>Quando máquinas novas entrarem no laboratório, basta rodar a opção 12 novamente — o script detecta quem já tem a chave e só configura as faltantes.</p>
+
+<h3>Voltar para modo senha</h3>
+<p>Edite <code>configs/lablivre.conf</code> e troque:</p>
+<pre><span class="kw">LAB_AUTH_MODE</span>=<span class="str">"chave"</span>  →  <span class="kw">LAB_AUTH_MODE</span>=<span class="str">"senha"</span></pre>
+
+<div class="box warn">
+  <div class="box-title">📖 Veja também</div>
+  <p>Documento detalhado em <code>docs/SEGURANCA.md</code> com plano de resposta a incidentes.</p>
+</div>
+
+<!-- ─────────── SEÇÃO 10 ─────────── -->
+<h2 id="s10">10. Agendamentos Automáticos (Cron)</h2>
+
+<p>O <code>_provisionar.sh</code> instala automaticamente as seguintes tarefas no <code>crontab</code> do usuário, identificadas pelo marcador <code># LabLivre</code> para evitar duplicação:</p>
+
+<table>
+  <tr><th>Horário</th><th>Tarefa</th></tr>
+  <tr><td><code>07:00</code> diário</td><td>Sincroniza relógio (<code>timedatectl</code> ou <code>ntpdate</code>) de todas as máquinas</td></tr>
+  <tr><td>A cada hora</td><td>Mapeia a rede + regenera <code>api.json</code> e <code>auditoria.json</code></td></tr>
+  <tr><td><code>23:00</code> diário</td><td>Shutdown agendado (pula o orquestrador)</td></tr>
+  <tr><td><code>23:59</code> diário</td><td>Snapshot do dia em <code>historico.jsonl</code></td></tr>
+  <tr><td><code>03:00</code> domingos</td><td>Backup automático do <code>macs.txt</code> (mantém últimos 30)</td></tr>
+</table>
+
+<h3>Verificar/editar agendamentos</h3>
+<pre><span class="cmt"># Ver os crons do LabLivre</span>
+<span class="fn">crontab</span> -l | <span class="fn">grep</span> LabLivre
+
+<span class="cmt"># Editar manualmente (se necessário)</span>
+<span class="fn">crontab</span> -e</pre>
+
+<h3>Servidor web (systemd)</h3>
+<pre><span class="cmt"># Ver status</span>
+<span class="fn">sudo</span> systemctl status lablivre-web.service
+
+<span class="cmt"># Reiniciar (se precisar)</span>
+<span class="fn">sudo</span> systemctl restart lablivre-web.service
+
+<span class="cmt"># Logs do serviço</span>
+<span class="fn">sudo</span> journalctl -u lablivre-web.service -f</pre>
+
+<!-- ─────────── SEÇÃO 10b ─────────── -->
+<h2 id="s10b">10b. Snapshot Diário e Mapa de Calor <span class="tag-new">v4.1.7</span></h2>
+
+<p>O LabLivre acumula dois tipos de histórico que alimentam análises longitudinais e o dashboard de Mapa de Calor.</p>
+
+<h3>📸 snapshot_diario.sh</h3>
+
+<p>Roda automaticamente todo dia às <b>23h59</b> via cron. Cada execução adiciona <b>uma linha JSON</b> ao arquivo <code>logs/historico.jsonl</code>, capturando o estado do laboratório naquele momento e as ações realizadas durante o dia.</p>
+
+<h4>Exemplo de linha gerada</h4>
+<pre>{<span class="str">"data"</span>:<span class="str">"2026-06-09"</span>,<span class="str">"total"</span>:18,<span class="str">"online"</span>:12,<span class="str">"offline"</span>:6,
+ <span class="str">"provas_ativadas"</span>:2,<span class="str">"manutencoes"</span>:1,<span class="str">"distribuicoes"</span>:4}</pre>
+
+<table>
+  <tr><th>Campo</th><th>Significado</th><th>Origem</th></tr>
+  <tr><td><code>data</code></td><td>Data da captura</td><td><code>date</code></td></tr>
+  <tr><td><code>total</code></td><td>Máquinas conhecidas</td><td><code>ips_atuais.txt</code></td></tr>
+  <tr><td><code>online</code></td><td>Ligadas no momento</td><td><code>ips_atuais.txt</code></td></tr>
+  <tr><td><code>offline</code></td><td>Desligadas no momento</td><td><code>ips_atuais.txt</code></td></tr>
+  <tr><td><code>provas_ativadas</code></td><td>Modo prova ativado HOJE</td><td><code>auditoria.jsonl</code></td></tr>
+  <tr><td><code>manutencoes</code></td><td>Atualizações de pacotes HOJE</td><td><code>auditoria.jsonl</code></td></tr>
+  <tr><td><code>distribuicoes</code></td><td>Materiais distribuídos HOJE</td><td><code>auditoria.jsonl</code></td></tr>
+</table>
+
+<h4>Consultas úteis</h4>
+<pre><span class="cmt"># Último dia</span>
+<span class="fn">tail</span> -1 logs/historico.jsonl | <span class="fn">jq</span> .
+
+<span class="cmt"># Total de provas em junho/2026</span>
+<span class="fn">grep</span> <span class="str">'"data":"2026-06'</span> logs/historico.jsonl | <span class="fn">jq</span> .provas_ativadas | <span class="fn">awk</span> <span class="str">'{s+=$1} END {print s}'</span>
+
+<span class="cmt"># Dia com mais máquinas online</span>
+<span class="fn">jq</span> -s <span class="str">'max_by(.online)'</span> logs/historico.jsonl</pre>
+
+<div class="box info">
+  <div class="box-title">📖 Documentação completa</div>
+  <p>Veja <code>docs/snapshot_diario.md</code> para detalhes adicionais, limitações conhecidas e fontes de dados.</p>
+</div>
+
+<h3>🔥 Mapa de Calor (gerar_mapa_calor.sh)</h3>
+
+<p>A cada mapeamento de rede (manual ou via cron horário), o sistema também registra <b>uma linha por máquina</b> em <code>logs/historico_maquinas.jsonl</code>. Esse acúmulo alimenta o dashboard <b>Mapa de Calor</b> que mostra quais máquinas são mais utilizadas no laboratório.</p>
+
+<h4>Como funciona</h4>
+<ol>
+  <li>Cada execução do <code>atualizar_ips.sh</code> registra <code>{"ts","mac","nome","ip","status"}</code> para cada máquina</li>
+  <li><code>gerar_mapa_calor.sh</code> agrega por MAC e calcula a frequência relativa de cada máquina</li>
+  <li>O resultado vai para <code>web/mapa_calor.json</code></li>
+  <li>O dashboard <code>web/mapa_calor.html</code> consome o JSON e classifica em 5 níveis:</li>
+</ol>
+
+<table>
+  <tr><th>Nível</th><th>Faixa de uso</th><th>Cor</th></tr>
+  <tr><td>🔥 Hot</td><td>80–100% do máximo</td><td>Vermelho</td></tr>
+  <tr><td>🌶️ Warm</td><td>60–79%</td><td>Laranja</td></tr>
+  <tr><td>☀️ Mild</td><td>40–59%</td><td>Amarelo</td></tr>
+  <tr><td>❄️ Cold</td><td>20–39%</td><td>Azul claro</td></tr>
+  <tr><td>🧊 Frozen</td><td>0–19%</td><td>Azul escuro</td></tr>
+</table>
+
+<p>O histórico é limitado a aproximadamente 30 dias (10080 registros considerando varredura horária) para evitar crescimento ilimitado.</p>
+
+<div class="box success">
+  <div class="box-title">💡 Utilidade prática</div>
+  <p>Permite identificar:</p>
+  <ul>
+    <li>Máquinas <b>subutilizadas</b> (candidatas a remanejamento)</li>
+    <li>Máquinas <b>com problema</b> (sempre offline = falha ou WoL desligado)</li>
+    <li>Padrões de <b>posicionamento preferido</b> dos alunos</li>
+  </ul>
+</div>
+
+<!-- ─────────── SEÇÃO 11 ─────────── -->
+<h2 id="s11">11. Comandos Core e Técnicas Internas</h2>
+
+<h3>Auto-detecção de rede (Zero-Config)</h3>
+<pre><span class="cmt"># 1. Identifica a interface ativa</span>
+<span class="kw">IFACE</span>=$(ip route | <span class="fn">awk</span> <span class="str">'/default/ {print $5}'</span> | head -1)
+
+<span class="cmt"># 2. Extrai CIDR exato</span>
+<span class="kw">REDE</span>=$(ip -o -f inet addr show dev <span class="str">"$IFACE"</span> | <span class="fn">awk</span> <span class="str">'{print $4}'</span>)
+
+<span class="cmt"># 3. nmap com ARP ping (-PR): opera em camada 2, ignora firewalls do alvo</span>
+<span class="fn">sudo</span> nmap -sn -PR <span class="str">"$REDE"</span></pre>
+
+<h3>Execução fileless via SSH</h3>
+<pre><span class="cmt"># Heredoc com aspas simples impede expansão local de variáveis (segurança)</span>
+<span class="kw">PAYLOAD</span>=$(<span class="fn">cat</span> &lt;&lt;<span class="str">'EOF'</span>
+<span class="fn">echo</span> <span class="str">"CPU: $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2)"</span>
+<span class="str">EOF</span>
+)
+<span class="fn">echo</span> <span class="str">"$PAYLOAD"</span> | <span class="fn">ssh_remote_stdin</span> <span class="str">"$ip"</span> <span class="str">"bash"</span></pre>
+
+<h3>Wrapper SSH unificado (chave ou senha)</h3>
+<pre><span class="cmt"># modulos/_ssh.sh decide automaticamente o modo</span>
+<span class="fn">ssh_remote</span>() {
+  <span class="kw">if</span> [ <span class="str">"$LAB_AUTH_MODE"</span> = <span class="str">"chave"</span> ]; <span class="kw">then</span>
+    ssh -i <span class="str">"$CHAVE_SSH"</span> <span class="str">"$LAB_USUARIO@$ip"</span> <span class="str">"$cmd"</span>
+  <span class="kw">else</span>
+    sshpass -p <span class="str">"$LAB_SENHA"</span> ssh <span class="str">"$LAB_USUARIO@$ip"</span> <span class="str">"$cmd"</span>
+  <span class="kw">fi</span>
+}</pre>
+
+<h3>Tar-Pipe Stream (distribuição de material)</h3>
+<pre><span class="cmt"># Empacota local, transmite via SSH, extrai remoto — sem arquivos intermediários</span>
+<span class="fn">tar</span> -cf - -C <span class="str">"$DIR_PAI"</span> <span class="str">"$NOME"</span> | <span class="fn">ssh_remote_stdin</span> <span class="str">"$ip"</span> \
+  <span class="str">"tar -xf - -C ~/Área\ de\ Trabalho/Material"</span></pre>
+
+<h3>Modo Prova (iptables)</h3>
+<pre><span class="fn">sudo</span> iptables -F OUTPUT
+<span class="fn">sudo</span> iptables -P OUTPUT DROP
+<span class="fn">sudo</span> iptables -I OUTPUT -o lo -j ACCEPT
+<span class="fn">sudo</span> iptables -I OUTPUT -d 10.0.0.0/8 -j ACCEPT
+<span class="fn">sudo</span> iptables -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
+<span class="fn">sudo</span> iptables -I OUTPUT -d 200.236.0.0/16 -j ACCEPT  <span class="cmt"># rede UFPR</span></pre>
+
+<div class="box warn">
+  <div class="box-title">⚠ Limitação conhecida</div>
+  <p>As regras <code>iptables</code> <b>não persistem após reboot</b>. Para uso em provas longas, considere integrar <code>iptables-persistent</code> (planejado para futuro).</p>
+</div>
+
+<h3>Loop com proteção contra consumo de stdin</h3>
+<pre><span class="cmt"># Use < <(tail) — NUNCA tail | while — pois ssh dentro do loop consome stdin</span>
+<span class="kw">while</span> read -r mac ip nome resto; <span class="kw">do</span>
+    <span class="cmt"># ...comandos SSH aqui funcionam corretamente...</span>
+<span class="kw">done</span> &lt; &lt;(<span class="fn">tail</span> -n +3 <span class="str">"$ARQUIVO_IPS"</span>)</pre>
+
+<!-- ─────────── SEÇÃO 12 ─────────── -->
+<h2 id="s12">12. Qualidade: Testes, Dry-run, .deb <span class="tag-new">NOVO v4</span></h2>
+
+<h3>Suíte de testes automatizados</h3>
+<pre><span class="fn">bash</span> tests/run_tests.sh
+
+<span class="cmt"># Saída:</span>
+<span class="cmt"># [1] Sintaxe de todos os scripts shell  → 47 ok</span>
+<span class="cmt"># [2] Geração de api.json                → 4 ok</span>
+<span class="cmt"># [3] Sistema de auditoria                → 2 ok</span>
+<span class="cmt"># [4] Snapshot diário                     → 2 ok</span>
+<span class="cmt"># [5] Wrapper SSH (chave/senha)           → 6 ok</span>
+<span class="cmt"># [6] Modo dry-run                        → 1 ok</span>
+<span class="cmt"># ─────────────────────────────────────</span>
+<span class="cmt"># RESULTADO: 58 passou, 0 falhou</span></pre>
+
+<h3>Modo dry-run (simulação)</h3>
+<p>Flag <code>--dry-run</code> nos scripts destrutivos: exibe os comandos que seriam executados, sem efetivá-los. Ideal para treinar professores novos:</p>
+<pre><span class="fn">bash</span> menu.sh --dry-run
+
+<span class="cmt"># Quando você escolher "Desligar Lab", verá:</span>
+<span class="cmt">#   [DRY-RUN] ssh ufpr@200.236.4.166 "sudo shutdown -h now"</span>
+<span class="cmt">#   [DRY-RUN] ssh ufpr@200.236.4.167 "sudo shutdown -h now"</span></pre>
+
+<h3>Construir o pacote .deb</h3>
+<pre><span class="kw">cd</span> /opt/lablivre
+<span class="fn">bash</span> packaging/build_deb.sh
+
+<span class="cmt"># Gera: lablivre_4.1.7_all.deb</span>
+<span class="cmt"># Para instalar em outro lab:</span>
+<span class="fn">sudo</span> apt install ./lablivre_4.1.7_all.deb</pre>
+
+<h3>Versionamento</h3>
+<p>O projeto segue <b>Semantic Versioning</b> (semver):</p>
+<ul>
+  <li><b>MAJOR</b> (X.0.0): mudanças incompatíveis (renomeio de arquivo de config, mudança de API JSON, etc.)</li>
+  <li><b>MINOR</b> (4.X.0): novas funcionalidades sem quebrar compatibilidade</li>
+  <li><b>PATCH</b> (4.1.X): correções de bugs e ajustes</li>
+</ul>
+<p>Todas as mudanças documentadas em <code>CHANGELOG.md</code>.</p>
+
+<!-- ─────────── SEÇÃO 13 ─────────── -->
+<h2 id="s13">13. Troubleshooting</h2>
+
+<h3>"Dashboards aparecem em branco / 'Carregando...' permanente"</h3>
+<p>Provavelmente você está abrindo o HTML via <code>file://</code> (clique duplo). Use sempre <code>http://localhost:8080/</code>. Verifique também:</p>
+<pre><span class="fn">sudo</span> systemctl status lablivre-web.service
+<span class="fn">curl</span> -s http://localhost:8080/api.json | head -5</pre>
+
+<h3>"xmenu.sh: Esta opção não está disponível"</h3>
+<p>Versões antigas do Zenity usavam <code>--icon=</code>, mas o Zenity 3.42+ renomeou para <code>--window-icon=</code>. Atualize para v4.1.3 ou superior — o problema está corrigido.</p>
+
+<h3>"SSH consome só a primeira máquina do laço"</h3>
+<p>Acontece com <code>tail | while</code>. Use sempre <code>while ... done &lt; &lt;(tail)</code>.</p>
+
+<h3>"Modo prova ativou mas máquinas continuam com internet"</h3>
+<p>Verifique se o usuário SSH tem <code>sudo</code> para <code>iptables</code>. Teste manualmente:</p>
+<pre><span class="fn">ssh</span> usuario@ip <span class="str">"echo SENHA | sudo -S iptables -L OUTPUT"</span></pre>
+
+<h3>"atualizar_ips não encontra máquinas"</h3>
+<ol>
+  <li>Confirme que <code>configs/macs.txt</code> está preenchido</li>
+  <li>Verifique se o usuário tem <code>sudo</code> para nmap (ARP ping requer privilégio)</li>
+  <li>Teste manualmente: <code>sudo nmap -sn -PR &lt;sua-sub-rede&gt;</code></li>
+</ol>
+
+<h3>"Sincronizar horário falha em todas"</h3>
+<p>Verifique se <code>timedatectl</code> está disponível. Use:</p>
+<pre><span class="fn">which</span> timedatectl ntpdate</pre>
+<p>Se nenhum dos dois existir nas máquinas, instale: <code>sudo apt install systemd-timesyncd</code>.</p>
+
+<h3>"Esqueci a senha do lablivre.conf"</h3>
+<pre><span class="fn">sudo</span> cat /opt/lablivre/configs/lablivre.conf
+<span class="cmt"># OU re-execute o wizard:</span>
+<span class="kw">cd</span> /opt/lablivre &amp;&amp; <span class="fn">bash</span> configurar_lab.sh</pre>
+
+<h3>"Quero ver tudo que aconteceu no lab"</h3>
+<pre><span class="fn">cat</span> logs/auditoria.jsonl | <span class="fn">jq</span> .
+<span class="cmt"># OU pelo dashboard:</span>
+<span class="cmt"># http://localhost:8080/dashboard_auditoria.html</span></pre>
+
+<!-- ─────────── SEÇÃO 14 ─────────── -->
+<h2 id="s14">14. Roadmap e Trabalhos Futuros</h2>
+
+<div class="box new">
+  <div class="box-title">🔮 Planejado para próximas versões</div>
+  <ul>
+    <li><b>Persistência do modo prova após reboot</b> via <code>iptables-persistent</code></li>
+    <li><b>Meta-dashboard</b> consolidando múltiplos labs num único painel (infraestrutura de exportação já existe em <code>modulos/exportar_estado_publico.sh</code>)</li>
+    <li><b>Bot de consulta remota</b> via Telegram para "quantas máquinas online agora?" pelo celular</li>
+    <li><b>Integração com calendário de reservas</b> institucional</li>
+    <li><b>Gráficos longitudinais</b> baseados no <code>historico.jsonl</code></li>
+    <li><b>Comparativo de hardware</b> no inventário (destacar máquinas fora do padrão)</li>
+  </ul>
+</div>
+
+<h3>Como contribuir</h3>
+<ol>
+  <li>Fork no repositório</li>
+  <li>Crie uma branch para sua feature: <code>git checkout -b minha-feature</code></li>
+  <li>Rode os testes: <code>bash tests/run_tests.sh</code> (devem todos passar)</li>
+  <li>Adicione testes para a nova funcionalidade</li>
+  <li>Atualize o <code>CHANGELOG.md</code></li>
+  <li>Abra Pull Request</li>
+</ol>
+
+<footer>
+  <p>LabLivre v4.1.7 · Documentação atualizada em Junho/2026</p>
+  <p>UFPR Palotina · Licenciatura em Computação · Software livre sob licença aberta</p>
+  <p>Contato: <a href="mailto:jefer@ufpr.br">jefer@ufpr.br</a></p>
+</footer>
+
+</div>
+</body>
+</html>

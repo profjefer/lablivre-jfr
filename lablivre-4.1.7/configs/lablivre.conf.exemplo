@@ -1,0 +1,8 @@
+# Configuração do LabLivre — copie para lablivre.conf e ajuste
+# (ou use a opção 99 do menu para configurar interativamente)
+LAB_NOME="meu-laboratorio"
+LAB_USUARIO="ufpr"
+LAB_SENHA="TROQUE_AQUI"
+LAB_PASTA_MATERIAL="envia_material"
+LAB_IDIOMA="pt_BR"
+LAB_AUTH_MODE="senha"
