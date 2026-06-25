@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>LabLivre :: NETOPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #000;
+  --green: #00ff41;
+  --green-dim: #00802b;
+  --green-glow: #00ff4150;
+  --amber: #ffb000;
+  --red: #ff0040;
+  --cyan: #00ffff;
+}
+body {
+  font-family: 'Share Tech Mono', monospace;
+  background: var(--bg);
+  color: var(--green);
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+  overflow-x: hidden;
+}
+/* Scanlines */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    rgba(0,255,65,0.03) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+/* CRT flicker */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  z-index: 11;
+  animation: flicker 0.15s infinite;
+}
+
+.container { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+
+.terminal-header {
+  border-bottom: 1px dashed var(--green);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+.ascii-logo {
+  font-family: 'VT323', monospace;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green-glow);
+  white-space: pre;
+}
+.timestamp {
+  text-align: right;
+  color: var(--green-dim);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.cmd-line { margin: 16px 0; font-size: 14px; }
+.cmd-line::before { content: '$ '; color: var(--amber); }
+.prompt { color: var(--green-dim); }
+
+.section {
+  border: 1px solid var(--green);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  background: rgba(0, 255, 65, 0.02);
+  position: relative;
+}
+.section::before {
+  content: '[ ' attr(data-title) ' ]';
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--amber);
+  letter-spacing: 0.2em;
+}
+
+.grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.stat-box { padding: 8px 0; }
+.stat-key { font-size: 12px; color: var(--green-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+.stat-val {
+  font-family: 'VT323', monospace;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--green);
+  text-shadow: 0 0 15px var(--green-glow);
+}
+.stat-val.alert { color: var(--red); text-shadow: 0 0 15px var(--red); }
+.stat-val.warn { color: var(--amber); text-shadow: 0 0 15px var(--amber); }
+
+table { width: 100%; font-size: 13px; }
+table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--green-dim);
+  color: var(--amber);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+table td {
+  padding: 6px 12px;
+  border-bottom: 1px dotted rgba(0, 255, 65, 0.2);
+}
+.status-up { color: var(--green); }
+.status-down { color: var(--red); }
+.this-machine { color: var(--cyan); }
+
+.alert-box {
+  background: var(--red);
+  color: black;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  animation: blink 1s infinite;
+  text-transform: uppercase;
+}
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.6; }
+}
+
+.cursor::after {
+  content: '_';
+  animation: blink-cursor 1s infinite;
+}
+@keyframes blink-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="terminal-header">
+    <pre class="ascii-logo"> _       _    ____  _    ___  _    ______  _____ 
+| |     / \  | __ )| |  |_ _|/ \  |  _ \ \/ / _ \
+| |    / _ \ |  _ \| |   | |/ _ \ | |_) \  / | | |
+| |___/ ___ \| |_) | |___| / ___ \|  _ < \/| |_| |
+|_____/_/   \_\____/|_____|_/_/   \_\_| \_\\/  \___/  v3.0</pre>
+    <div class="timestamp" id="timestamp">SYS::INIT</div>
+  </div>
+
+  <div class="cmd-line"><span class="prompt">lablivre@netops:~</span># <span class="cursor">cat /lab/state</span></div>
+
+  <div id="alert-container"></div>
+
+  <div class="section" data-title="LAB STATUS">
+    <div class="grid-stats">
+      <div class="stat-box">
+        <div class="stat-key">LAB</div>
+        <div class="stat-val" id="lab-nome" style="font-size:24px;">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-key">TOTAL_NODES</div>
+        <div class="stat-val" id="total">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-key">UP</div>
+        <div class="stat-val" id="online">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-key">DOWN</div>
+        <div class="stat-val alert" id="offline">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" data-title="NETWORK">
+    <div class="cmd-line"><span class="prompt">iface</span>:&nbsp; <span id="iface">—</span></div>
+    <div class="cmd-line"><span class="prompt">cidr</span>:&nbsp;&nbsp; <span id="cidr">—</span></div>
+    <div class="cmd-line"><span class="prompt">last_scan</span>: <span id="last-scan">—</span></div>
+  </div>
+
+  <div class="section" data-title="NODES">
+    <table id="nodes-table">
+      <thead>
+        <tr><th>STATE</th><th>HOST</th><th>MAC</th><th>IPv4</th></tr>
+      </thead>
+      <tbody id="nodes-tbody">
+        <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--green-dim);">// loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cmd-line"><span class="prompt">lablivre@netops:~</span># <span id="footer-cmd">auto_refresh --interval=30s</span> <span class="cursor"></span></div>
+</div>
+
+<script>
+function ts() {
+  const n = new Date();
+  return n.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+}
+
+async function refresh() {
+  try {
+    const r = await fetch('api.json?t=' + Date.now());
+    const d = await r.json();
+
+    document.getElementById('timestamp').textContent = 'SYS_TIME::' + ts();
+    document.getElementById('lab-nome').textContent = d.lab.nome;
+    document.getElementById('total').textContent = String(d.rede.total).padStart(3, '0');
+    document.getElementById('online').textContent = String(d.rede.online).padStart(3, '0');
+    document.getElementById('offline').textContent = String(d.rede.offline).padStart(3, '0');
+    document.getElementById('iface').textContent = d.rede.interface || '???';
+    document.getElementById('cidr').textContent = d.rede.sub_rede || '???';
+    document.getElementById('last-scan').textContent = d.lab.ips_atualizado_em;
+
+    const alertContainer = document.getElementById('alert-container');
+    alertContainer.innerHTML = d.modo_prova.ativo
+      ? `<div class="alert-box">[!] LOCKDOWN_MODE :: ACTIVE :: SINCE ${d.modo_prova.desde}</div>`
+      : '';
+
+    const tbody = document.getElementById('nodes-tbody');
+    if (d.maquinas.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--green-dim);">// no nodes registered</td></tr>';
+    } else {
+      tbody.innerHTML = d.maquinas.map(m => `
+        <tr>
+          <td><span class="${m.status === 'online' ? 'status-up' : 'status-down'}">[${m.status === 'online' ? 'UP' : 'DOWN'}]</span></td>
+          <td class="${m.esta_maquina ? 'this-machine' : ''}">${m.nome}${m.esta_maquina ? ' &lt;&lt; LOCALHOST' : ''}</td>
+          <td>${m.mac}</td>
+          <td>${m.ip}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    document.getElementById('alert-container').innerHTML = '<div class="alert-box">[!] ERR :: api.json not found</div>';
+  }
+}
+refresh(); setInterval(refresh, 30000);
+</script>
+</body>
+</html>

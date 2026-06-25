@@ -1,0 +1,94 @@
+#!/bin/bash
+set -e
+
+# ============================================================
+# postinst — Após instalar o .deb
+# ============================================================
+
+INSTALL_DIR="/opt/lablivre"
+
+# Descobre o usuário real que está instalando (não o root do sudo)
+# SUDO_USER é definido quando se usa 'sudo apt install'
+USUARIO_REAL="${SUDO_USER:-$USER}"
+# Se ainda assim for root ou vazio, tenta o primeiro usuário com UID >= 1000
+if [ -z "$USUARIO_REAL" ] || [ "$USUARIO_REAL" = "root" ]; then
+    USUARIO_REAL=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}' /etc/passwd)
+fi
+GRUPO_REAL=$(id -gn "$USUARIO_REAL" 2>/dev/null || echo "$USUARIO_REAL")
+
+# 1. Permissões de execução
+chmod +x "$INSTALL_DIR"/*.sh 2>/dev/null || true
+chmod +x "$INSTALL_DIR"/modulos/*.sh 2>/dev/null || true
+chmod +x "$INSTALL_DIR"/xmodulos/*.sh 2>/dev/null || true
+chmod +x "$INSTALL_DIR"/tests/*.sh 2>/dev/null || true
+chmod +x "$INSTALL_DIR"/packaging/build_deb.sh 2>/dev/null || true
+
+# 2. Cria pastas mutáveis (excluídas do .deb por design)
+mkdir -p "$INSTALL_DIR"/logs
+mkdir -p "$INSTALL_DIR"/configs
+mkdir -p "$INSTALL_DIR"/configs/.backups
+mkdir -p "$INSTALL_DIR"/envia_material
+mkdir -p "$INSTALL_DIR"/web
+
+# 3. Cria arquivo macs.txt vazio se não existir
+touch "$INSTALL_DIR"/configs/macs.txt 2>/dev/null || true
+
+# 4. DONO: o app é operado por um humano, não um daemon.
+#    Dá posse da instalação inteira ao usuário real (permite gravar
+#    ips_atuais.txt, web/api.json, logs/, etc. sem precisar de sudo).
+if [ -n "$USUARIO_REAL" ] && id "$USUARIO_REAL" >/dev/null 2>&1; then
+    chown -R "$USUARIO_REAL":"$GRUPO_REAL" "$INSTALL_DIR" 2>/dev/null || true
+    echo "[postinst] Posse de $INSTALL_DIR atribuída a $USUARIO_REAL:$GRUPO_REAL"
+else
+    echo "[postinst] AVISO: não consegui detectar o usuário operador."
+    echo "           Após instalar, rode manualmente:"
+    echo "           sudo chown -R \$USER:\$USER $INSTALL_DIR"
+fi
+
+# 5. Permissões: /opt atravessável + arquivos web legíveis pelo servidor
+chmod 755 /opt 2>/dev/null || true
+chmod 755 "$INSTALL_DIR" 2>/dev/null || true
+chmod 755 "$INSTALL_DIR"/web 2>/dev/null || true
+chmod 644 "$INSTALL_DIR"/web/*.html 2>/dev/null || true
+chmod 644 "$INSTALL_DIR"/web/*.json 2>/dev/null || true
+# configs/ e logs/ restritos ao dono (contêm senha e dados operacionais)
+chmod 700 "$INSTALL_DIR"/configs 2>/dev/null || true
+chmod 700 "$INSTALL_DIR"/logs 2>/dev/null || true
+
+# 6. Symlinks em /usr/local/bin (executam como o usuário, não como root)
+ln -sf "$INSTALL_DIR"/menu.sh  /usr/local/bin/lablivre
+ln -sf "$INSTALL_DIR"/xmenu.sh /usr/local/bin/lablivre-gui
+
+cat << EOF
+
+╔════════════════════════════════════════════════════════════════╗
+║          ✅ LABLIVRE INSTALADO COM SUCESSO!                     ║
+╚════════════════════════════════════════════════════════════════╝
+
+  Instalação em : $INSTALL_DIR
+  Operado por   : $USUARIO_REAL
+  Comandos      : lablivre        (menu texto · menu.sh)
+                  lablivre-gui    (menu gráfico · xmenu.sh)
+
+  PRÓXIMOS PASSOS:
+
+  1. Preencha a lista de MACs do seu laboratório:
+       nano $INSTALL_DIR/configs/macs.txt
+
+       Formato (uma máquina por linha):
+         aa:bb:cc:dd:ee:ff   nome-da-maquina
+
+  2. Inicie o orquestrador e faça a configuração inicial:
+       lablivre
+       → escolha a opção 99 (Configurações)
+
+       (Vai pedir usuário/senha SSH dos clientes e
+        configurar crons + servidor web automaticamente)
+
+  3. No menu, escolha a opção 1 (Mapear Rede) para começar.
+
+  Documentação: $INSTALL_DIR/docs/wiki_lablivre.html
+
+EOF
+
+exit 0

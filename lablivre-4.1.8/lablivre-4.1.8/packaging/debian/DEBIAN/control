@@ -1,0 +1,16 @@
+Package: lablivre
+Version: 4.1.8
+Section: admin
+Priority: optional
+Architecture: all
+Depends: bash, nmap, sshpass, zenity, wakeonlan, ethtool, dmidecode, python3, netcat-openbsd, jq, bc
+Recommends: avahi-utils
+Maintainer: UFPR Palotina <suporte@palotina.ufpr.br>
+Description: LabLivre — Orquestrador de Laboratórios GNU/Linux
+ Sistema de administração remota para laboratórios de informática Linux.
+ Permite controlar todas as máquinas a partir da máquina do professor
+ via SSH, sem necessidade de agentes nas máquinas dos alunos.
+ .
+ Inclui dashboards web em tempo real, modo prova com bloqueio de
+ internet, distribuição de material didático, Wake-on-LAN, inventário
+ de hardware e auditoria estruturada em JSON.

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Calor · LabLivre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117; --bg-card: #111820; --text: #c9d1d9; --dim: #6e7681;
+  --hot: #ef4444; --warm: #f59e0b; --mild: #fbbf24; --cold: #3b82f6; --frozen: #1e3a8a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text); padding: 32px;
+  font-family: 'JetBrains Mono', monospace; min-height: 100vh;
+}
+header { border-bottom: 2px solid var(--hot); padding-bottom: 20px; margin-bottom: 28px; }
+h1 { color: #fff; font-size: 2rem; font-family: 'Syne', sans-serif; font-weight: 800; }
+h1 span { color: var(--hot); }
+.meta { color: var(--dim); margin-top: 6px; font-size: 14px; }
+.back { float: right; color: var(--dim); text-decoration: none; font-size: 14px; }
+.back:hover { color: var(--hot); }
+
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; }
+.stat .label { color: var(--dim); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.stat .val { font-size: 2rem; font-weight: 800; margin-top: 6px; color: var(--hot); }
+
+.legenda { background: var(--bg-card); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px;
+           display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.legenda h3 { color: var(--text); font-size: 14px; font-weight: 600; }
+.lg-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.lg-bola { width: 20px; height: 20px; border-radius: 4px; }
+
+.grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px; margin-top: 8px;
+}
+.maquina {
+  background: var(--bg-card); border-radius: 10px; padding: 14px;
+  border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden;
+}
+.maquina::before {
+  content: ''; position: absolute; inset: 0; opacity: 0.15; pointer-events: none;
+  background: var(--cor);
+}
+.maquina .nome { color: var(--text); font-weight: 600; font-size: 14px; word-break: break-word; position: relative; }
+.maquina .mac { color: var(--dim); font-size: 11px; margin-top: 4px; position: relative; }
+.maquina .uso { font-size: 1.8rem; font-weight: 800; margin-top: 8px; color: var(--cor-texto); position: relative; }
+.maquina .uso-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; position: relative; }
+.maquina .barra {
+  height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 10px;
+  overflow: hidden; position: relative;
+}
+.maquina .barra-fill { height: 100%; background: var(--cor); transition: width 0.5s; }
+
+.maquina[data-int="100"], .maquina[data-int="9"][data-int^="9"] { --cor: var(--hot); --cor-texto: var(--hot); }
+.maquina.q-hot    { --cor: var(--hot);    --cor-texto: var(--hot); }
+.maquina.q-warm   { --cor: var(--warm);   --cor-texto: var(--warm); }
+.maquina.q-mild   { --cor: var(--mild);   --cor-texto: var(--mild); }
+.maquina.q-cold   { --cor: var(--cold);   --cor-texto: var(--cold); }
+.maquina.q-frozen { --cor: var(--frozen); --cor-texto: var(--dim); }
+
+.maquina.q-frozen .uso { color: var(--dim); }
+
+footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);
+         color: var(--dim); font-size: 12px; text-align: center; }
+footer a { color: var(--hot); text-decoration: none; }
+.status { color: var(--dim); font-size: 14px; }
+
+@media (max-width: 700px) {
+  .summary { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="back">↩ Portal</a>
+  <h1>🔥 Mapa de Calor · <span id="lab-nome">—</span></h1>
+  <div class="meta">Frequência de uso por máquina · atualizado em <span id="ts">—</span></div>
+</header>
+
+<div class="summary">
+  <div class="stat">
+    <div class="label">Máquinas Monitoradas</div>
+    <div class="val" id="total-maq">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">Observações Totais</div>
+    <div class="val" id="total-obs">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">Mais Usada (vezes online)</div>
+    <div class="val" id="max-uso">—</div>
+  </div>
+</div>
+
+<div class="legenda">
+  <h3>Intensidade de uso:</h3>
+  <div class="lg-item"><div class="lg-bola" style="background:#ef4444"></div>Hot (80-100%)</div>
+  <div class="lg-item"><div class="lg-bola" style="background:#f59e0b"></div>Warm (60-79%)</div>
+  <div class="lg-item"><div class="lg-bola" style="background:#fbbf24"></div>Mild (40-59%)</div>
+  <div class="lg-item"><div class="lg-bola" style="background:#3b82f6"></div>Cold (20-39%)</div>
+  <div class="lg-item"><div class="lg-bola" style="background:#1e3a8a"></div>Frozen (0-19%)</div>
+</div>
+
+<div class="grid" id="grid">
+  <div class="status">Carregando...</div>
+</div>
+
+<footer>
+  Dados acumulados a cada mapeamento da rede · LabLivre <span id="ver">4.1.7</span>
+  · <a href="index.html">Portal</a>
+</footer>
+
+<script>
+function classeCalor(intensidade) {
+  if (intensidade >= 80) return 'q-hot';
+  if (intensidade >= 60) return 'q-warm';
+  if (intensidade >= 40) return 'q-mild';
+  if (intensidade >= 20) return 'q-cold';
+  return 'q-frozen';
+}
+
+async function carregar() {
+  try {
+    const res = await fetch('mapa_calor.json?t=' + Date.now());
+    if (!res.ok) throw new Error('Não foi possível buscar mapa_calor.json');
+    const dados = await res.json();
+
+    document.getElementById('lab-nome').textContent = dados.lab || '—';
+    document.getElementById('ts').textContent = new Date(dados.gerado_em).toLocaleString('pt-BR');
+    document.getElementById('total-maq').textContent = dados.total_maquinas;
+    document.getElementById('total-obs').textContent = dados.observacoes_totais;
+    document.getElementById('max-uso').textContent = dados.max_uso;
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+
+    if (!dados.maquinas || dados.maquinas.length === 0) {
+      grid.innerHTML = '<div class="status">Nenhum dado coletado ainda. O histórico é construído a cada mapeamento da rede.</div>';
+      return;
+    }
+
+    // Ordena por uso (descendente)
+    dados.maquinas.sort((a, b) => b.uso - a.uso);
+
+    dados.maquinas.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'maquina ' + classeCalor(m.intensidade);
+      div.setAttribute('data-int', m.intensidade);
+      div.innerHTML = `
+        <div class="nome">${m.nome}</div>
+        <div class="mac">${m.mac}</div>
+        <div class="uso-label">vezes online</div>
+        <div class="uso">${m.uso}</div>
+        <div class="barra"><div class="barra-fill" style="width:${m.intensidade}%"></div></div>
+      `;
+      grid.appendChild(div);
+    });
+  } catch (e) {
+    document.getElementById('grid').innerHTML =
+      '<div class="status">⚠ ' + e.message + '<br><br>Execute primeiro: <code>bash modulos/gerar_mapa_calor.sh</code></div>';
+  }
+}
+
+carregar();
+setInterval(carregar, 60000); // atualiza a cada 1 min
+</script>
+</body>
+</html>
