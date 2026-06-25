@@ -20,7 +20,7 @@ sudo apt install ./lablivre_4.1.8_all.deb
 
 **Via Git:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/profjefer/lablivre-jfr/main/gitinstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/profjefer/lablivre-jfr/main/lablivre-4.1.8/lablivre-4.1.8/gitinstall.sh | bash
 ```
 
 ### Principais recursos
@@ -64,4 +64,19 @@ Veja o CHANGELOG.md para detalhes.
 
   # Se pedir autenticação, use um Personal Access Token (não a senha):
   # GitHub → Settings → Developer settings → Personal access tokens
+
+
+  ═══════════════════════════════════════════════════════════════════
+   USOU?
+  ═══════════════════════════════════════════════════════════════════
+ Relate seu Uso e Contribua! 
+ 
+👋 Está usando o LabLivre no seu laboratório? Queremos te ouvir!
+
+Se este projeto facilitou a sua rotina pedagógica ou de administração de TI, deixe seu relato! Adoraríamos saber onde o LabLivre está rodando e como ele tem ajudado.
+
+Conte para nós: Abra uma Issue ou inicie uma discussão relatando sua experiência. Ou email prof.jefer@gmail.com.
+
+Mostre seu Lab: Se puder, anexe uma foto ou um pequeno vídeo do painel rodando ou das máquinas do seu laboratório em ação. Esse feedback é fundamental para continuarmos evoluindo a ferramenta!
+  
 
