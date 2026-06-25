@@ -6,7 +6,7 @@ Orquestrador de laboratórios Linux via SSH. Gerencie dezenas de máquinas Ubunt
 WIKI
  https://profjefer.github.io/lablivre-jfr/docs/wiki_lablivre.html
 
-## LabLivre v4.1.7
+## LabLivre v4.1.8
 
 Orquestrador de laboratórios Linux via SSH. Gerencie todo o laboratório
 da máquina do professor, sem instalar nada nas máquinas dos alunos.
@@ -15,7 +15,7 @@ da máquina do professor, sem instalar nada nas máquinas dos alunos.
 
 **Via .deb (recomendado):**
 ```bash
-sudo apt install ./lablivre_4.1.7_all.deb
+sudo apt install ./lablivre_4.1.8_all.deb
 ```
 
 **Via Git:**
@@ -37,6 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/profjefer/lablivre-jfr/main/gitinst
 - Correção definitiva da distribuição de material (detecção do Desktop via xdg-user-dir)
 - gitinstall.sh alinhado ao .deb (symlinks, permissões, ownership)
 - .gitignore protegendo credenciais
+- add limpeza do ~/Downloads
 
 Veja o CHANGELOG.md para detalhes.
 
@@ -56,7 +57,7 @@ Veja o CHANGELOG.md para detalhes.
   # ⚠️ CONFIRA antes de continuar — lablivre.conf NÃO pode aparecer:
   git status
 
-  git commit -m "LabLivre v4.1.7 - orquestrador de laboratorios Linux via SSH"
+  git commit -m "LabLivre v4.1.8 - orquestrador de laboratorios Linux via SSH"
   git branch -M main
   git remote add origin https://github.com/profjefer/lablivre-jfr.git
   git push -u origin main
