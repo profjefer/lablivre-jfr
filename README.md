@@ -4,7 +4,7 @@ DESCRIÇÃO DO REPOSITÓRIO
 Orquestrador de laboratórios Linux via SSH. Gerencie dezenas de máquinas Ubuntu de um único ponto: mapeamento de rede, modo prova, distribuição de material, inventário e dashboards web. Em Shell Script, sem agentes. Feito na UFPR Palotina.
 
 WIKI
- https://profjefer.github.io/lablivre-jfr/docs/wiki_lablivre.html
+ [https://profjefer.github.io/lablivre-jfr/docs/wiki_lablivre.html](https://github.com/profjefer/lablivre-jfr/blob/main/lablivre-4.1.8/lablivre-4.1.8/docs/wiki_lablivre.html)
 
 ## LabLivre v4.1.8
 
