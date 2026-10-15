@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════
+#  .gitignore — LabLivre
+#  Protege dados sensíveis e arquivos gerados em runtime
+# ═══════════════════════════════════════════════════════════
+
+# ─── CREDENCIAIS E DADOS SENSÍVEIS (NUNCA versionar!) ───
+configs/lablivre.conf
+configs/lablivre_key
+configs/lablivre_key.pub
+configs/.backups/
+
+# ─── Lista de MACs do lab (específica de cada instalação) ───
+configs/macs.txt
+
+# ─── Arquivos gerados em runtime ───
+ips_atuais.txt
+logs/
+web/api.json
+web/auditoria.json
+web/mapa_calor.json
+web/inventario.html
+web/status.html
+web/relatorio_*.html
+
+# ─── Material didático (não versionar conteúdo de aula) ───
+envia_material/*
+!envia_material/.gitkeep
+
+# ─── Pacotes gerados ───
+*.deb
+*.tar.gz
+
+# ─── Temporários e lixo ───
+*.swp
+*.swo
+*~
+*.tmp
+/tmp/
+.DS_Store
+
+# ─── IDEs ───
+.vscode/
+.idea/

@@ -1,0 +1,14 @@
+# Configuração do LabLivre — copie para lablivre.conf e ajuste
+# (ou use a opção 99 do menu para configurar interativamente)
+LAB_NOME="meu-laboratorio"
+LAB_USUARIO="softwarelivre"
+LAB_SENHA="TROQUE_AQUI"
+LAB_PASTA_MATERIAL="envia_material"
+LAB_IDIOMA="pt_BR"
+LAB_AUTH_MODE="senha"
+
+# --- Modo Prova (opcionais) ---
+# Redes IPv4 que continuam acessíveis durante a prova (o orquestrador é liberado sempre).
+LAB_PROVA_REDES="10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 200.236.0.0/16"
+# Validade padrão do bloqueio, em horas (1 a 24). Depois disso ele se desfaz sozinho.
+LAB_PROVA_HORAS="4"
