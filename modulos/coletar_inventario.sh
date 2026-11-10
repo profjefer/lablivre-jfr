@@ -51,6 +51,32 @@ echo "UPTIME: $(uptime -p 2>/dev/null | sed 's/^up //')"
 WOL=$(s ethtool "$IFACE" | awk '/^[[:space:]]*Wake-on:/ {print $2}')
 case "$WOL" in *g*) WOL="ativo ($WOL)" ;; "") WOL="desconhecido" ;; *) WOL="DESATIVADO ($WOL)" ;; esac
 echo "WOL: $WOL em ${IFACE:-?}"
+# Rede física: velocidade do cabo e situação do wifi (planejar manutenção)
+E=$(ls /sys/class/net 2>/dev/null | grep -E '^(en|eth)' | head -n 1)
+if [ -n "$E" ]; then
+    V=$(cat "/sys/class/net/$E/speed" 2>/dev/null); D=$(cat "/sys/class/net/$E/duplex" 2>/dev/null)
+    if [ "$(cat "/sys/class/net/$E/carrier" 2>/dev/null)" = 1 ] && [ "${V:--1}" -gt 0 ] 2>/dev/null; then
+        echo "CABO: $V Mb/s ${D:-?} em $E"
+    else
+        echo "CABO: sem link em $E"
+    fi
+else
+    echo "CABO: sem placa"
+fi
+W=$(ls /sys/class/net 2>/dev/null | grep '^wl' | head -n 1)
+if [ -n "$W" ]; then
+    WL=$(nmcli -t -f DEVICE,STATE,CONNECTION device 2>/dev/null | awk -F: -v d="$W" '$1==d {print $2":"$3}')
+    WA=$(nmcli -t -f TYPE,AUTOCONNECT connection show 2>/dev/null | grep -c '^802-11-wireless:yes')
+    case "${WL%%:*}" in
+        connected)   WS="conectado em ${WL#*:}" ;;
+        unavailable) WS="desligado" ;;
+        "")          WS="?" ;;
+        *)           WS="${WL%%:*}" ;;
+    esac
+    echo "WIFI: $WS · $WA rede(s) automática(s) · $W $(cat "/sys/class/net/$W/address" 2>/dev/null)"
+else
+    echo "WIFI: sem placa"
+fi
 if command -v lsusb >/dev/null 2>&1; then
     echo "USB: $(lsusb | grep -vic 'root hub') dispositivo(s): $(lsusb | grep -vi 'root hub' | cut -d' ' -f7- | cut -c1-40 | paste -sd';' -)"
 else

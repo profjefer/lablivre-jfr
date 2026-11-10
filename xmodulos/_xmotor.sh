@@ -34,7 +34,7 @@ x_motor() {
     X_SAIDA_TXT=$(cat "$saida")
     # Resumo no topo, saída completa embaixo
     {
-        grep -E '^\[(CONCLU|ENVIADO|ERRO)|^Resumo:|^🟢|^🔴|^⚠️' "$saida"
+        grep -E '^\[(CONCLU|ENVIADO|ERRO)|^Resumo:|^🟢|^🔴|^⚠️|^📶|^Velocidade' "$saida"
         echo "────────────────────────────────────────────────────────"
         cat "$saida"
     } > "$saida.view"

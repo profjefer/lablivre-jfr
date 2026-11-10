@@ -463,5 +463,76 @@ assert_ok "gitinstall: git roda como o operador (não sudo git)" "! grep -qE 'su
 assert_ok "gitinstall: na raiz do repositório e restaura o macs.txt" "[ -f '$PROJ_DIR/gitinstall.sh' ] && [ -f '$PROJ_DIR/menu.sh' ] && grep -q '_preservar_macs.sh\" restaurar' '$PROJ_DIR/gitinstall.sh'"
 assert_ok "git: macs.txt e lablivre.conf ficam fora do repositório" "grep -qx 'configs/macs.txt' '$PROJ_DIR/.gitignore' && grep -qx 'configs/lablivre.conf' '$PROJ_DIR/.gitignore'"
 
+# ================================================================
+echo ""
+echo "[42-11] 4.2.8: padronizar rede, MACs ignorados, cabo/wifi no inventário"
+# ================================================================
+# rede simulada: placa de cabo e2 (100 Mb/s) e wifi w2; estado do
+# NetworkManager e IP do cabo por máquina, em $HOME
+SN="$T42/sysnet2"; mkdir -p "$SN/en2" "$SN/wl2"
+echo 100 > "$SN/en2/speed"; echo full > "$SN/en2/duplex"; echo 1 > "$SN/en2/carrier"; echo 48:ad:00:00:00:02 > "$SN/wl2/address"
+cat > "$B/nmcli" <<'EOF'
+#!/bin/bash
+D="$HOME/nm_dev"; C="$HOME/nm_con"; a="$*"
+case "$a" in
+ "-t -f DEVICE,STATE device") cut -d: -f1,2 "$D" ;;
+ "-t -f DEVICE,STATE,CONNECTION device") cat "$D" ;;
+ "-t -f UUID,TYPE,AUTOCONNECT,NAME connection show") cat "$C" ;;
+ "-t -f TYPE,AUTOCONNECT connection show") cut -d: -f2,3 "$C" ;;
+ "connection modify "*" connection.autoconnect "*) awk -F: -v OFS=: -v u="$3" -v v="$5" '$1==u{$3=v}1' "$C" > "$C.t" && mv "$C.t" "$C" ;;
+ "device disconnect "*) sed -i "s/^$3:connected:.*/$3:disconnected:/" "$D" ;;
+ "device connect "*) sed -i "s/^$3:disconnected:.*/$3:connected:REDE/" "$D" ;;
+esac
+EOF
+cat > "$B/ip" <<'EOF'
+#!/bin/bash
+if [ "$1 $2 $3 $4 $5" = "-4 -o addr show dev" ]; then cat "$HOME/ip_cabo" 2>/dev/null; exit 0; fi
+exec /usr/bin/ip "$@"
+EOF
+chmod +x "$B/nmcli" "$B/ip"
+for h in 10.9.0.2 10.9.0.33; do
+    printf 'en2:connected:Cabeada\nw2:connected:UFPR_SEM_FIO\n' > "$T42/hosts/$h/nm_dev"
+    printf 'u-cabo:802-3-ethernet:yes:Cabeada\nu-ufpr:802-11-wireless:yes:UFPR_SEM_FIO\nu-cel:802-11-wireless:yes:iPhone de Fulano\nu-velha:802-11-wireless:no:Antiga\n' > "$T42/hosts/$h/nm_con"
+done
+sed -i 's/^w2:/wl2:/' "$T42"/hosts/*/nm_dev
+echo "2: en2    inet 10.9.0.2/24" > "$T42/hosts/10.9.0.2/ip_cabo"     # pc03 sem IP no cabo
+pr() { (cd "$P" && PATH="$B:/usr/bin:/bin" LAB_SYS_NET="$SN" LAB_MARCA_WIFI="$T42/marca_wifi" bash modulos/padronizar_rede.sh "$@" < /dev/null 2>&1); }
+SAIDA=$(pr verificar)
+assert_ok "padronizar: mostra a velocidade do cabo" "grep -q 'pc02 .*cabo 100 Mb/s' <<< \"\$SAIDA\" && grep -q 'Velocidade do cabo: 2× 100 Mb/s' <<< \"\$SAIDA\""
+assert_ok "padronizar: aponta quem está no cabo E no wifi" "grep -q 'No cabo E no wifi (1): pc02' <<< \"\$SAIDA\""
+assert_ok "padronizar: verificar não muda nada" "grep -q 'u-ufpr:802-11-wireless:yes' '$T42/hosts/10.9.0.2/nm_con'"
+pr desligar-wifi --dry-run >/dev/null
+assert_ok "padronizar: dry-run não muda nada" "grep -q 'u-ufpr:802-11-wireless:yes' '$T42/hosts/10.9.0.2/nm_con' && [ ! -e '$T42/marca_wifi' ]"
+SAIDA=$(pr desligar-wifi)
+assert_ok "padronizar: tira a conexão automática de todas as redes wifi" "! grep -q '802-11-wireless:yes' '$T42/hosts/10.9.0.2/nm_con'"
+assert_ok "padronizar: não mexe na conexão do cabo" "grep -q 'u-cabo:802-3-ethernet:yes' '$T42/hosts/10.9.0.2/nm_con'"
+assert_ok "padronizar: desconecta o wifi" "grep -q '^wl2:disconnected' '$T42/hosts/10.9.0.2/nm_dev'"
+assert_ok "padronizar: anota só o que mexeu (para desfazer)" "grep -qx u-ufpr '$T42/marca_wifi' && grep -qx u-cel '$T42/marca_wifi' && ! grep -q u-velha '$T42/marca_wifi'"
+assert_ok "padronizar: cabo sem IP → wifi MANTIDO" "grep -q 'pc03 .*wifi MANTIDO' <<< \"\$SAIDA\" && grep -q 'u-ufpr:802-11-wireless:yes' '$T42/hosts/10.9.0.33/nm_con'"
+SAIDA=$(pr religar-wifi pc02)
+assert_ok "padronizar: religar devolve só o que foi mexido" "grep -q 'u-ufpr:802-11-wireless:yes' '$T42/hosts/10.9.0.2/nm_con' && grep -q 'u-velha:802-11-wireless:no' '$T42/hosts/10.9.0.2/nm_con' && [ ! -e '$T42/marca_wifi' ]"
+rm -f "$B/nmcli" "$B/ip"
+
+printf '10.9.0.254\t00:11:22:33:44:55\tExtreme Networks\n10.9.0.77\t9c:6b:00:1b:0d:ed\tASRock\n10.9.0.2\taa:00:00:00:00:02\tDell\n' > "$T42/arp.txt"
+printf '# conhecidos\n9C:6B:00:1B:0D:ED   PC de outra sala\n' > "$P/configs/macs_ignorar.txt"
+SAIDA=$(cd "$P" && PATH="$B:/usr/bin:/bin" ARPSCAN="$T42/arp.txt" bash modulos/atualizar_ips.sh < /dev/null 2>&1)
+assert_ok "MACs ignorados: não aparecem como desconhecidos" "! grep -q '9c:6b:00:1b:0d:ed' <<< \"\$SAIDA\" && grep -q '00:11:22:33:44:55' <<< \"\$SAIDA\""
+assert_ok "MACs ignorados: o mapeamento diz quantos foram ignorados" "grep -q '1 dispositivo(s) de configs/macs_ignorar.txt' <<< \"\$SAIDA\""
+rm -f "$P/configs/macs_ignorar.txt"
+
+printf '%s\n' "MÁQUINA: pc02 (10.9.0.2 | aa)" "CABO: 100 Mb/s full em en2" "WIFI: conectado em UFPR · 2 rede(s) automática(s) · wl2 x" \
+  "MÁQUINA: pc03 (10.9.0.33 | bb)" "CABO: 10 Mb/s full em en2" "WIFI: desligado · 0 rede(s) automática(s) · wl2 y" \
+  "MÁQUINA: pc04 (10.9.0.4 | cc)" "Não coletado: sem conexão SSH." > "$P/logs/inventario_lab.txt"
+roda bash modulos/inventario_para_html.sh >/dev/null 2>&1
+INV="$P/web/inventario.html"
+assert_ok "inventário: todas as máquinas na tabela (BASH_REMATCH)" "[ \$(grep -c '<td class=\"nome\">' '$INV') = 3 ]"
+assert_ok "inventário: máquina sem coleta aparece como falha, com o motivo" "grep -q 'Não respondeu (sem conexão SSH.)' '$INV'"
+assert_ok "inventário: cabo abaixo de 100 Mb/s em vermelho" "grep -q '<td class=\"err\"[^>]*>10 Mb/s</td>' '$INV'"
+assert_ok "inventário: resumo de rede para planejar manutenção" "grep -q 'class=\"plano\".*1× 10 Mb/s · 1× 100 Mb/s.*wifi conectado em <b>1</b>' '$INV'"
+assert_ok "inventário: coleta inclui CABO e WIFI" "grep -q 'echo \"CABO: ' '$PROJ_DIR/modulos/coletar_inventario.sh' && grep -q 'echo \"WIFI: ' '$PROJ_DIR/modulos/coletar_inventario.sh'"
+
+assert_ok "ligar: espera padrão de 20 s" "grep -q 'ESPERA_PADRAO=\"\${LAB_ESPERA_LIGAR:-20}\"' '$PROJ_DIR/modulos/ligar_labold.sh' && ! grep -q 'esperar 90' '$PROJ_DIR/xmodulos/xligar_labold.sh'"
+assert_ok "menus: opção 19 (Padronizar Rede) no texto e no gráfico" "grep -q '19) bash modulos/padronizar_rede.sh' '$PROJ_DIR/menu.sh' && grep -q '19) bash xmodulos/xpadronizar_rede.sh' '$PROJ_DIR/xmodulos/xmenu.sh'"
+
 rm -rf "$T42"
 cd "$PROJ_DIR"

@@ -130,6 +130,7 @@ while true; do
     echo "16 - ⏰ Sincronizar Horário (NTP / hora do orquestrador)"
     echo "17 - 🩺 Saúde do Sistema (cron, servidor web, serviços)"
     echo "18 - ⚡ Preparar Wake-on-LAN nas máquinas (permanente)"
+    echo "19 - 🌐 Padronizar Rede (cabo, velocidade, desligar wifi)"
     echo "--------------------------------------------------------"
     echo "0  - ❌ Sair"
     echo "========================================================"
@@ -158,6 +159,7 @@ while true; do
         16) bash modulos/sincronizar_horario.sh ;;
         17) bash modulos/saude_sistema.sh ;;
         18) bash modulos/preparar_wol.sh ;;
+        19) bash modulos/padronizar_rede.sh ;;
         99)
             bash configurar_lab.sh
             source "$CONF_FILE"

@@ -214,6 +214,7 @@ mostrar_dashboard() {
         "11" "🛠 Administração" "Corrigir Repositórios" "Vacina APT (remove repos quebrados)" "💊" \
         "12" "🛠 Administração" "Diagnosticar SSH" "Testa cada máquina e diz o que fazer" "🔍" \
         "18" "🛠 Administração" "Preparar Wake-on-LAN" "Deixa o WoL permanente (máquinas que não ligam)" "⚡" \
+        "19" "🛠 Administração" "Padronizar Rede" "Velocidade do cabo; desliga o wifi de quem está no cabo" "🌐" \
         "17" "🛠 Administração" "Saúde do Sistema" "Confere cron, servidor web e serviços (e corrige)" "🩺" \
         "16" "🛠 Administração" "Limpar Downloads" "Apaga Downloads e Lixeira das máquinas" "🧹" \
         "13" "📊 Relatórios" "Visualizar Logs" "Relatórios do mais novo ao mais antigo" "📄" \
@@ -260,6 +261,7 @@ while true; do
         15) abrir_pagina_web >/dev/null ;;
         17) saude_sistema ;;
         18) x_motor "Preparar Wake-on-LAN" "Ajustando as máquinas online..." "" modulos/preparar_wol.sh ;;
+        19) bash xmodulos/xpadronizar_rede.sh ;;
         16) bash xmodulos/xlimpar_downloads.sh ;;
         99)
             bash xmodulos/xconfigurar_lab.sh

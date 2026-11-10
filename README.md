@@ -9,7 +9,7 @@ Funciona por SSH, **sem instalar nada nas máquinas dos alunos** (modelo *agentl
 É escrito em Bash, com um pequeno servidor web em Python, e tem testes automatizados.
 Desenvolvido e usado no dia a dia nos laboratórios da **UFPR Palotina**.
 
-**Versão atual:** 4.2.7 · Software livre · Ubuntu 24.04+ · **somente IPv4**
+**Versão atual:** 4.2.8 · Software livre · Ubuntu 24.04+ · **somente IPv4**
 
 | O que faz | Como |
 |---|---|
@@ -30,15 +30,15 @@ Baixe o pacote da [última versão](https://github.com/profjefer/lablivre-jfr/re
 (ou da pasta [`dist/`](dist/) deste repositório) e instale:
 
 ```bash
-wget https://github.com/profjefer/lablivre-jfr/raw/main/dist/lablivre_4.2.7_all.deb
-sudo apt install ./lablivre_4.2.7_all.deb
+wget https://github.com/profjefer/lablivre-jfr/raw/main/dist/lablivre_4.2.8_all.deb
+sudo apt install ./lablivre_4.2.8_all.deb
 ```
 
 **Para atualizar**, instale o pacote novo por cima, com o mesmo comando. O cron, o serviço
 web e o Wake-on-LAN configurados pela opção 99 continuam valendo.
 
 > Atualizando de uma versão **até a 4.2.6**? O pacote antigo apagava o cron e o serviço web
-> ao ser atualizado. A 4.2.7 recoloca os dois sozinha. Se eles já tinham sumido antes
+> ao ser atualizado. A partir da 4.2.7, o pacote recoloca os dois sozinho. Se eles já tinham sumido antes
 > (`crontab -l` sem linhas `# LabLivre`), rode a opção **99** ou a **17** uma vez.
 
 ### Opção B — Via Git
@@ -67,7 +67,7 @@ de busca é: essas cópias, depois `configs/.backups/`, depois
 
 ### Baixar o projeto compactado
 
-O código também está compactado em [`dist/lablivre-4.2.7.tar.gz`](dist/) e nas
+O código também está compactado em [`dist/lablivre-4.2.8.tar.gz`](dist/) e nas
 [Releases](https://github.com/profjefer/lablivre-jfr/releases). Para gerar o pacote a
 partir do código: `bash packaging/build_deb.sh` (saída em `dist/`).
 
@@ -113,6 +113,8 @@ d0:94:66:e1:81:57    lula-molusco
 - **A máquina do professor** pode estar na lista. Ela é reconhecida pelo MAC e marcada como `(ESTA MÁQUINA)`.
 - **MAC inválido ou duplicado** gera aviso na opção 1.
 - **MACs que respondem na rede mas não estão no arquivo** vão para `logs/macs_desconhecidos.log`.
+- **Dispositivos conhecidos que não são do lab** (roteador, PC de outra sala…): coloque-os em
+  `configs/macs_ignorar.txt`, no mesmo formato, para não aparecerem mais nesse aviso.
 
 ---
 
@@ -138,6 +140,7 @@ d0:94:66:e1:81:57    lula-molusco
 | 16 | **Sincronizar horário** (NTP; se não houver NTP, usa a hora do orquestrador) |
 | 17 | **Saúde do sistema:** instalação, `macs.txt`, dependências, idade do mapa, servidor web (inclusive o de instalação antiga na porta 8080), cron e serviços. Oferece corrigir |
 | 18 | **Preparar Wake-on-LAN** (permanente): ethtool, `wol g`, serviço que rearma no boot, NetworkManager |
+| 19 | **Padronizar Rede:** velocidade do cabo de cada máquina e quem está no cabo **e** no wifi. Desliga o wifi automático só onde o cabo funciona (dá para desfazer) |
 | 99 | **Configurações globais** (nome do lab, usuário, senha, pasta de material) |
 
 Os módulos que agem nas máquinas aceitam `--dry-run` (só mostram o que fariam). Para simular tudo: `lablivre --dry-run`.
@@ -162,7 +165,7 @@ ou nos IPs de `LAB_WEB_ADMINS`. A opção 13 mostra o endereço com o IP real
 | `index.html` | Portal com todos os painéis |
 | `maquinas.html` | **Tabela única e sempre atual** das máquinas (substitui os antigos `relatorio_*.html` e `status.html`). Avisa quando o mapa está velho |
 | `dashboard_*.html` | Operacional, TV, Prova, NetOps, Auditoria |
-| `inventario.html` | Hardware (aparece um aviso até a primeira coleta) |
+| `inventario.html` | Hardware e rede física (velocidade do cabo, wifi) para planejar manutenção. Aparece um aviso até a primeira coleta |
 | `mapa_calor.html` | Uso das máquinas ao longo do tempo |
 
 ---
@@ -247,7 +250,7 @@ Para alterar, use a opção **99** (ela preserva as outras variáveis) ou edite 
 bash tests/run_tests.sh
 ```
 Os testes rodam com comandos simulados (SSH, sudo, iptables, systemd…), então não tocam a
-rede nem o sistema. São 195 asserções na 4.2.7.
+rede nem o sistema. São 217 asserções na 4.2.8.
 
 ---
 

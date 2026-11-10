@@ -261,11 +261,22 @@ echo ">> Log bruto da varredura: $LOG_SCAN"
 # ----------------------------------------------------------------
 # 6. MACs NA REDE QUE NÃO ESTÃO NO macs.txt (segurança/auditoria)
 # ----------------------------------------------------------------
-DESCONHECIDOS=""
+# configs/macs_ignorar.txt: dispositivos conhecidos que não são do lab
+# (roteador, PC de outra sala, câmera...). Formato igual ao macs.txt:
+#   9c:6b:00:1b:0d:ed   PC ASRock com MySQL (outra sala)
+declare -A IGNORAR=()
+if [ -f configs/macs_ignorar.txt ]; then
+    while read -r m _; do
+        [[ "$m" =~ ^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$ ]] || continue
+        m="${m,,}"; IGNORAR["${m//-/:}"]=1
+    done < configs/macs_ignorar.txt
+fi
+DESCONHECIDOS=""; N_IGNORADOS=0
 while read -r mac ip; do
     [ -z "$mac" ] && continue
     [ "$mac" = "$MEU_MAC" ] && continue
     [ -n "${VISTO_MAC[$mac]}" ] && continue
+    [ -n "${IGNORAR[${mac,,}]:-}" ] && { ((N_IGNORADOS++)); continue; }
     fab="${FABRICANTE[$mac]:-}"
     [ "$ip" = "$(ip route show default 2>/dev/null | awk '{print $3; exit}')" ] && fab="roteador/gateway${fab:+ · $fab}"
     DESCONHECIDOS+="  • $mac ($ip)${fab:+  — $fab}"$'\n'
@@ -278,11 +289,15 @@ if [ -n "$DESCONHECIDOS" ]; then
     echo "  (roteador, visitantes, celulares ou máquinas novas?)"
     echo "  Para identificar: o fabricante ajuda; numa máquina do lab, 'ip -br link' mostra"
     echo "  os MACs dela (en… = cabo, wl… = wifi). Se for do lab, acrescente ao macs.txt."
+    echo "  Se for conhecido e não for do lab, acrescente a configs/macs_ignorar.txt"
+    echo "  (mesmo formato: MAC e descrição) para não ser mais listado."
     {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] MACs desconhecidos detectados ($METODO):"
         printf '%s' "$DESCONHECIDOS"
     } >> logs/macs_desconhecidos.log
 fi
+
+[ "$N_IGNORADOS" -gt 0 ] && echo ">> $N_IGNORADOS dispositivo(s) de configs/macs_ignorar.txt na rede (não listados)."
 
 # ----------------------------------------------------------------
 # 7. MODO PROVA: bloqueia quem ligou depois / libera pendentes

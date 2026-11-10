@@ -7,6 +7,28 @@ e o projeto adota [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [4.2.8] — 2026-11-10
+
+Do teste presencial no laboratório: rede das máquinas, dispositivos conhecidos e inventário.
+
+### Adicionado
+- **Opção 19 — Padronizar Rede** (`modulos/padronizar_rede.sh`, também no menu gráfico). No lab, 10 máquinas estavam no cabo **e** no wifi. Se o cabo de uma delas falha, ela continua pelo wifi, que é outra sub-rede, some do mapeamento e fica fora do Modo Prova sem ninguém perceber. Foi o que aconteceu com a mulher-invisível. Elas também guardavam hotspots de celular de alunos com conexão automática.
+  - **verificar**: mostra, para cada máquina, a velocidade do cabo, o wifi e as redes wifi com conexão automática, e aponta quem está no cabo e no wifi. Pelo menu, depois pergunta se deve desligar.
+  - **desligar-wifi**: tira a conexão automática de todas as redes wifi e desconecta o wifi, **só onde o cabo está funcionando** (link, IP e conexão ativa). Onde o cabo está com problema, o wifi fica e o motivo é mostrado.
+  - **religar-wifi**: desfaz exatamente o que foi mexido, anotado em `/etc/lablivre/wifi_autoconnect_desligado` em cada máquina.
+- **`configs/macs_ignorar.txt`**: dispositivos conhecidos que não são do lab (roteador, PC de outra sala…) deixam de aparecer como "não cadastrados" no mapeamento. O formato é o mesmo do `macs.txt`. Veja `configs/macs_ignorar.txt.exemplo`.
+- **Inventário com a rede física**, para planejar manutenção:
+  - coluna **Cabo** com a velocidade: em vermelho abaixo de 100 Mb/s (cabo, conector ou porta com defeito), em âmbar a 100 Mb/s e em verde a 1 Gb/s ou mais;
+  - coluna **Wi-Fi** com o estado e quantas redes conectam sozinhas;
+  - um resumo no topo, por exemplo "cabo 15× 100 Mb/s · 1× 10 Mb/s · wifi conectado em 6".
+
+### Corrigido
+- **Inventário: máquinas sem coleta apareciam como se tivessem respondido**, com as colunas vazias. A coleta grava "Não coletado: <motivo>", e a página procurava "não respondeu". Agora aparecem como falha, com o motivo.
+- **Inventário: a máquina seguinte à que estava sendo processada podia sumir da tabela** (`BASH_REMATCH` sobrescrito).
+- Testes: 217 asserções.
+
+---
+
 ## [4.2.7] — 2026-11-10
 
 Instalação e repositório: o `macs.txt` não se perde mais e a instalação via Git voltou a funcionar.

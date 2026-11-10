@@ -26,6 +26,7 @@ DATA_FMT=$(date '+%d/%m/%Y %H:%M:%S')
 
 # Pula cabeçalho até a primeira "MÁQUINA:"
 TOTAL=0; SUCESSO=0; FALHA=0
+declare -A VEL_CONTA=(); WIFI_CONECTADO=0; WIFI_AUTO=0
 TMP_ROWS=$(mktemp)
 
 # Estado de parser
@@ -34,13 +35,15 @@ NOME=""; IP=""; MAC=""; DADOS=""
 flush_row() {
     [ -z "$NOME" ] && return
     ((TOTAL++))
-    if [[ "$DADOS" == *"não respondeu"* ]] || [[ -z "$DADOS" ]]; then
+    # "Não coletado: <motivo>" é o que o coletar_inventario.sh grava quando falha
+    if [[ "$DADOS" == *"não respondeu"* ]] || [[ "$DADOS" == *"Não coletado"* ]] || [[ -z "$(tr -d '[:space:]' <<< "$DADOS")" ]]; then
+        local motivo; motivo=$(sed -n 's/^Não coletado: //p' <<< "$DADOS" | head -n 1)
         ((FALHA++))
         cat >> "$TMP_ROWS" <<ROW
 <tr class="erro">
   <td class="nome">$NOME</td>
   <td class="ip">$IP</td>
-  <td colspan="14" class="err">⚠ Não respondeu</td>
+  <td colspan="16" class="err">⚠ Não respondeu${motivo:+ ($motivo)}</td>
 </tr>
 ROW
     else
@@ -52,6 +55,24 @@ ROW
         WOL=$(campo WOL); USB=$(campo USB); PYTHON=$(campo PYTHON); NODE=$(campo NODE)
         PACOTES=$(campo PACOTES | awk '{print $1}')
         CLASSE_WOL=""; [[ "$WOL" == DESATIVADO* ]] && CLASSE_WOL=' class="err"'
+        CABO=$(campo CABO); WIFI=$(campo WIFI)
+        # Cabo: <100 Mb/s = defeito (vermelho) · 100 = Fast Ethernet (âmbar) · 1000+ = ok
+        VEL=$(awk '{print $1}' <<< "$CABO"); CLASSE_CABO=""; TXT_CABO="${CABO:--}"
+        if [[ "$VEL" =~ ^[0-9]+$ ]]; then
+            VEL_CONTA[$VEL]=$(( ${VEL_CONTA[$VEL]:-0} + 1 ))
+            TXT_CABO="$VEL Mb/s"; [ "$VEL" -ge 1000 ] && TXT_CABO="$((VEL/1000)) Gb/s"
+            [[ "$CABO" == *half* ]] && TXT_CABO+=" (half)"
+            if [ "$VEL" -lt 100 ]; then CLASSE_CABO=' class="err" title="Abaixo de 100 Mb/s: cabo, conector ou porta do switch com defeito"'
+            elif [ "$VEL" -lt 1000 ]; then CLASSE_CABO=' class="warn" title="100 Mb/s (Fast Ethernet): switch ou cabeamento limitam"'
+            else CLASSE_CABO=' class="good"'; fi
+        elif [[ "$CABO" == sem* ]]; then
+            CLASSE_CABO=' class="err"'; VEL_CONTA[sem]=$(( ${VEL_CONTA[sem]:-0} + 1 ))
+        fi
+        # Wi-Fi: conectado junto com o cabo, ou com redes automáticas = âmbar
+        CLASSE_WIFI=""; TXT_WIFI=$(sed 's/ · wl[^ ]* .*$//' <<< "${WIFI:--}")
+        [[ "$WIFI" == conectado* ]] && { CLASSE_WIFI=' class="warn"'; ((WIFI_CONECTADO++)); }
+        N_AUTO=$(grep -o '[0-9]* rede(s) automática' <<< "$WIFI" | awk '{print $1}')
+        [ "${N_AUTO:-0}" -gt 0 ] && { CLASSE_WIFI=' class="warn"'; ((WIFI_AUTO++)); }
         cat >> "$TMP_ROWS" <<ROW
 <tr class="ok">
   <td class="nome">$NOME</td>
@@ -66,6 +87,8 @@ ROW
   <td>$BIOS</td>
   <td>${KERNEL:--}</td>
   <td${CLASSE_WOL}>${WOL:--}</td>
+  <td${CLASSE_CABO}>$TXT_CABO</td>
+  <td${CLASSE_WIFI} title="$WIFI">$TXT_WIFI</td>
   <td title="$USB">$(echo "${USB:--}" | cut -d: -f1)</td>
   <td>py ${PYTHON:--} · node ${NODE:--}</td>
   <td>$PACOTES</td>
@@ -77,16 +100,34 @@ ROW
 
 while IFS= read -r linha; do
     if [[ "$linha" =~ ^MÁQUINA:\ (.+)\ \((.+)\ \|\ (.+)\)$ ]]; then
+        # guarda antes do flush_row: ele usa =~ e sobrescreveria o BASH_REMATCH
+        local_nome="${BASH_REMATCH[1]}"; local_ip="${BASH_REMATCH[2]}"; local_mac="${BASH_REMATCH[3]}"
         flush_row
-        NOME="${BASH_REMATCH[1]}"
-        IP="${BASH_REMATCH[2]}"
-        MAC="${BASH_REMATCH[3]}"
+        NOME="$local_nome"
+        IP="$local_ip"
+        MAC="$local_mac"
         DADOS=""
     elif [[ -n "$NOME" ]]; then
         DADOS+="$linha"$'\n'
     fi
 done < "$TXT"
 flush_row
+
+# Rede para planejar manutenção: velocidades do cabo e wifi
+PLANO=""
+if [ "${#VEL_CONTA[@]}" -gt 0 ] || [ "$WIFI_CONECTADO" -gt 0 ] || [ "$WIFI_AUTO" -gt 0 ]; then
+    partes=()
+    for v in $(printf '%s\n' "${!VEL_CONTA[@]}" | sort -n); do
+        case "$v" in sem) partes+=("${VEL_CONTA[$v]}× sem link") ;; *) partes+=("${VEL_CONTA[$v]}× $v Mb/s") ;; esac
+    done
+    PLANO="<div class=\"plano\">🌐 <b>Rede:</b> cabo $(IFS='|'; echo "${partes[*]:-?}" | sed 's/|/ · /g')"
+    if [ -n "${VEL_CONTA[100]:-}" ] && [ -z "${VEL_CONTA[1000]:-}" ]; then
+        PLANO+=" — tudo a 100 Mb/s costuma ser o switch ou o cabeamento"
+    fi
+    [ "$WIFI_CONECTADO" -gt 0 ] && PLANO+=" · wifi conectado em <b>$WIFI_CONECTADO</b>"
+    [ "$WIFI_AUTO" -gt 0 ] && PLANO+=" · <b>$WIFI_AUTO</b> com wifi automático (menu 19 desliga)"
+    PLANO+="</div>"
+fi
 
 cat > "$HTML" << HTML_EOF
 <!DOCTYPE html>
@@ -114,6 +155,9 @@ tr.ok td.nome{color:var(--green);font-weight:600}
 tr.ok td.ip{color:var(--cyan)}
 tr.erro td.nome{color:var(--red)}
 tr.erro .err{color:var(--red);font-style:italic}
+td.err{color:var(--red);font-weight:600}td.warn{color:var(--amber)}td.good{color:var(--green)}
+.plano{background:var(--bg-card);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 18px;margin-bottom:28px;font-size:16px}
+.plano b{color:var(--amber)}
 footer{margin-top:30px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);color:var(--dim);font-size:14px;text-align:center}
 footer a{color:var(--cyan);text-decoration:none}
 </style>
@@ -129,10 +173,11 @@ footer a{color:var(--cyan);text-decoration:none}
   <div class="stat ok"><div class="label">Responderam</div><div class="val">$SUCESSO</div></div>
   <div class="stat err"><div class="label">Falharam</div><div class="val">$FALHA</div></div>
 </div>
+$PLANO
 <table>
 <thead><tr>
 <th>Nome</th><th>IP</th><th>Série</th><th>Modelo</th><th>Sistema</th><th>CPU</th><th>RAM</th>
-<th>Disco</th><th>GPU</th><th>BIOS</th><th>Kernel</th><th>Wake-on-LAN</th><th>USB</th><th>Python/Node</th><th>Pacotes</th><th>Uptime</th>
+<th>Disco</th><th>GPU</th><th>BIOS</th><th>Kernel</th><th>Wake-on-LAN</th><th>Cabo</th><th>Wi-Fi</th><th>USB</th><th>Python/Node</th><th>Pacotes</th><th>Uptime</th>
 </tr></thead>
 <tbody>
 $(cat "$TMP_ROWS")
