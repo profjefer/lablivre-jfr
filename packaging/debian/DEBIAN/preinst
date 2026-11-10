@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+# ============================================================
+# preinst — Antes de instalar/atualizar o .deb
+# ============================================================
+# Guarda uma cópia do macs.txt FORA do /opt antes de mexer em
+# qualquer coisa. (Autocontido: na instalação nova os módulos do
+# LabLivre ainda não estão no disco.)
+
+salvar_macs() {
+    local m=/opt/lablivre/configs/macs.txt d=/var/backups/lablivre
+    grep -qE '^[[:space:]]*([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}[[:space:]]+[^[:space:]]' "$m" 2>/dev/null || return 0
+    mkdir -p "$d" && chmod 755 "$d"
+    cmp -s "$m" "$d/macs.txt" && return 0
+    [ -f "$d/macs.txt" ] && cp -p "$d/macs.txt" "$d/macs_$(date '+%Y%m%d_%H%M%S').txt"
+    cp -p "$m" "$d/macs.txt"
+    ls -t "$d"/macs_*.txt 2>/dev/null | tail -n +11 | xargs -r rm -f
+    echo "[preinst] Cópia do macs.txt em $d/macs.txt"
+}
+
+salvar_macs || true
+exit 0

@@ -30,8 +30,12 @@ mkdir -p "$INSTALL_DIR"/configs/.backups
 mkdir -p "$INSTALL_DIR"/envia_material
 mkdir -p "$INSTALL_DIR"/web
 
-# 3. Cria arquivo macs.txt vazio se não existir
-touch "$INSTALL_DIR"/configs/macs.txt 2>/dev/null || true
+# 3. macs.txt: se estiver vazio ou faltando (instalação do zero, depois
+#    de um purge...), restaura a cópia guardada fora do /opt ou a da
+#    instalação antiga (/opt/scriptlab-jfr). Senão cria vazio.
+#    (Sem touch num arquivo que já existe: não mexe na data dele.)
+SUDO_USER="${SUDO_USER:-}" bash "$INSTALL_DIR"/modulos/_preservar_macs.sh restaurar || true
+[ -e "$INSTALL_DIR"/configs/macs.txt ] || touch "$INSTALL_DIR"/configs/macs.txt 2>/dev/null || true
 
 # 4. DONO: o app é operado por um humano, não um daemon.
 #    Dá posse da instalação inteira ao usuário real (permite gravar
@@ -44,6 +48,9 @@ else
     echo "           Após instalar, rode manualmente:"
     echo "           sudo chown -R \$USER:\$USER $INSTALL_DIR"
 fi
+
+# 4.5. Cópia de segurança do macs.txt fora do /opt (sobrevive a purge)
+SUDO_USER="${SUDO_USER:-}" bash "$INSTALL_DIR"/modulos/_preservar_macs.sh salvar || true
 
 # 5. Permissões: /opt atravessável + arquivos web legíveis pelo servidor
 chmod 755 /opt 2>/dev/null || true

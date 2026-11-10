@@ -11,6 +11,10 @@ DIR_BACKUP="configs/.backups"
 [ ! -f "$ORIGEM" ] && exit 0
 [ ! -s "$ORIGEM" ] && exit 0  # não fazer backup de arquivo vazio
 
+# Cópia também FORA do /opt (~/.local/share/lablivre): sobrevive a uma
+# reinstalação do zero e é restaurada sozinha pelo pacote.
+LAB_DIR="$(pwd)" bash modulos/_preservar_macs.sh salvar >/dev/null 2>&1 || true
+
 mkdir -p "$DIR_BACKUP"
 
 DESTINO="$DIR_BACKUP/macs_$(date '+%Y%m%d_%H%M%S').txt"

@@ -21,14 +21,25 @@ web/mapa_calor.json
 web/inventario.html
 web/status.html
 web/relatorio_*.html
+web/lablivre-raiz.txt
+dashboards/
+
+# ─── Cópias locais do macs.txt (ex.: macs-lablivre.txt, restauração) ───
+configs/macs*.txt
+configs/macs.txt.antes_de_restaurar
+ips_atuais*.txt
 
 # ─── Material didático (não versionar conteúdo de aula) ───
 envia_material/*
 !envia_material/.gitkeep
 
 # ─── Pacotes gerados ───
+# Só a pasta dist/ vai para o git (versão atual: .deb + projeto .tar.gz)
 *.deb
 *.tar.gz
+!dist/
+!dist/lablivre_*_all.deb
+!dist/lablivre-*.tar.gz
 
 # ─── Temporários e lixo ───
 *.swp

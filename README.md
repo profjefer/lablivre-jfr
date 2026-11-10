@@ -1,28 +1,70 @@
 # LabLivre — Orquestrador de Laboratório de Informática
 
-Sistema de administração remota para laboratórios Linux (Ubuntu 24.04+).
-Controla todas as máquinas do laboratório a partir da máquina do professor, via SSH,
-**sem instalar nada nos alunos** (modelo *agentless*).
+**Administre um laboratório inteiro de máquinas Linux a partir do computador do professor.**
+Ligar e desligar tudo pela rede, bloquear a internet durante a prova, mandar material e
+mensagens para as telas, atualizar pacotes, levantar o inventário de hardware e acompanhar
+tudo num portal web que se atualiza sozinho.
 
-**Versão atual:** 4.2.6 · Software livre · UFPR Palotina · **somente IPv4**
+Funciona por SSH, **sem instalar nada nas máquinas dos alunos** (modelo *agentless*).
+É escrito em Bash, com um pequeno servidor web em Python, e tem testes automatizados.
+Desenvolvido e usado no dia a dia nos laboratórios da **UFPR Palotina**.
+
+**Versão atual:** 4.2.7 · Software livre · Ubuntu 24.04+ · **somente IPv4**
+
+| O que faz | Como |
+|---|---|
+| 🗺️ Descobre os IPs das máquinas | arp-scan + nmap + ARP, a partir do `macs.txt` |
+| ⚡ Liga e desliga o laboratório | Wake-on-LAN (3 rodadas) e desligamento agendado |
+| 📝 Modo Prova | bloqueia a internet IPv4, mantém a rede local, tem validade e sobrevive a reboot |
+| 📦 Material e mensagens | envia arquivos para a Área de Trabalho e mostra avisos na tela |
+| 🔧 Manutenção | APT, repositórios quebrados, horário, limpeza de Downloads |
+| 🖥️ Inventário e portal web | hardware de cada máquina, painéis para TV, mapa de calor, auditoria |
 
 ---
 
-## 🚀 Instalação rápida
+## 🚀 Instalação
 
 ### Opção A — Pacote .deb (recomendado)
+
+Baixe o pacote da [última versão](https://github.com/profjefer/lablivre-jfr/releases/latest)
+(ou da pasta [`dist/`](dist/) deste repositório) e instale:
+
 ```bash
-sudo apt install ./lablivre_4.2.6_all.deb
+wget https://github.com/profjefer/lablivre-jfr/raw/main/dist/lablivre_4.2.7_all.deb
+sudo apt install ./lablivre_4.2.7_all.deb
 ```
 
+**Para atualizar**, instale o pacote novo por cima, com o mesmo comando.
+
 ### Opção B — Via Git
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/profjefer/lablivre-jfr/main/gitinstall.sh | bash
 ```
 
-As duas opções instalam em `/opt/lablivre` e criam os comandos `lablivre` (texto) e
-`lablivre-gui` (gráfico). Atualizar é instalar o pacote novo por cima: `lablivre.conf`,
-`macs.txt` e logs são preservados.
+**Para atualizar**, rode o mesmo comando (ele faz `git pull`). Use uma opção ou a outra:
+se a máquina já tem o pacote `.deb`, o instalador via Git avisa e explica como trocar.
+
+Nos dois casos, o LabLivre fica em `/opt/lablivre`, com os comandos `lablivre` (texto) e
+`lablivre-gui` (gráfico). Atualizar **nunca** mexe no `lablivre.conf`, no `macs.txt` e
+nos logs.
+
+### O `macs.txt` não se perde mais
+
+A cada instalação, atualização ou remoção, o LabLivre guarda uma cópia do `macs.txt`
+**fora do `/opt`**, em `/var/backups/lablivre/` (com as 10 versões anteriores) e em
+`~/.local/share/lablivre/`. O backup semanal do cron também atualiza a segunda cópia.
+
+Numa instalação do zero (depois de um `apt purge`, de um `rm -rf /opt/lablivre` ou
+vindo do scriptlab), se o `macs.txt` estiver vazio, ele é **restaurado sozinho**. A ordem
+de busca é: essas cópias, depois `configs/.backups/`, depois
+`/opt/scriptlab-jfr/configs/macs-lablivre.txt`. A instalação mostra de onde ele veio.
+
+### Baixar o projeto compactado
+
+O código também está compactado em [`dist/lablivre-4.2.7.tar.gz`](dist/) e nas
+[Releases](https://github.com/profjefer/lablivre-jfr/releases). Para gerar o pacote a
+partir do código: `bash packaging/build_deb.sh` (saída em `dist/`).
 
 ### Depois de instalar
 ```bash
@@ -152,8 +194,13 @@ ou nos IPs de `LAB_WEB_ADMINS`. A opção 13 mostra o endereço com o IP real
 ├── logs/                   ← relatórios, auditoria.jsonl, histórico
 ├── docs/                   ← MODO_PROVA.md, SEGURANCA.md, ROADMAP.md, wiki
 ├── tests/run_tests.sh      ← suíte de testes automatizados
-└── packaging/              ← geração do .deb
+├── packaging/              ← geração do .deb (build_deb.sh, preinst/postinst/postrm)
+├── dist/                   ← .deb e .tar.gz da versão atual (só no repositório)
+└── gitinstall.sh           ← instalar/atualizar pelo Git
 ```
+
+Fora do `/opt`: `/var/backups/lablivre/` e `~/.local/share/lablivre/` guardam as cópias do
+`macs.txt`. O `apt purge` não apaga essas pastas.
 
 ---
 
@@ -194,7 +241,8 @@ Para alterar, use a opção **99** (ela preserva as outras variáveis) ou edite 
 ```bash
 bash tests/run_tests.sh
 ```
-Os testes rodam com comandos simulados (SSH, sudo, iptables, systemd…), então não tocam a rede.
+Os testes rodam com comandos simulados (SSH, sudo, iptables, systemd…), então não tocam a
+rede nem o sistema. São 190 asserções na 4.2.7.
 
 ---
 

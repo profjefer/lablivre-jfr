@@ -2,7 +2,9 @@
 
 # build_deb.sh — Monta o pacote .deb do LabLivre
 # Uso: bash packaging/build_deb.sh
-# Saída: lablivre_VERSAO_all.deb
+# Saída (pasta dist/, que vai para o git e para a Release do GitHub):
+#   dist/lablivre_VERSAO_all.deb    pacote para apt install
+#   dist/lablivre-VERSAO.tar.gz     o projeto compactado (pasta lablivre-VERSAO/)
 
 set -e
 
@@ -30,10 +32,10 @@ mkdir -p "$TMP/$PACOTE/opt/lablivre"
 
 # Copia metadados Debian (control, postinst, postrm)
 cp packaging/debian/DEBIAN/control "$TMP/$PACOTE/DEBIAN/"
-cp packaging/debian/DEBIAN/postinst "$TMP/$PACOTE/DEBIAN/"
-cp packaging/debian/DEBIAN/postrm "$TMP/$PACOTE/DEBIAN/"
-chmod 755 "$TMP/$PACOTE/DEBIAN/postinst"
-chmod 755 "$TMP/$PACOTE/DEBIAN/postrm"
+for s in preinst postinst postrm; do
+    cp "packaging/debian/DEBIAN/$s" "$TMP/$PACOTE/DEBIAN/"
+    chmod 755 "$TMP/$PACOTE/DEBIAN/$s"
+done
 
 # Atualiza versão no control (caso esteja desatualizada)
 sed -i "s/^Version:.*/Version: $VERSAO/" "$TMP/$PACOTE/DEBIAN/control"
@@ -58,6 +60,8 @@ tar -cf - \
     --exclude='./web/lablivre-raiz.txt' \
     --exclude='./packaging' \
     --exclude='./.git' \
+    --exclude='./.github' \
+    --exclude='./dist' \
     --exclude='./lablivre_*.deb' \
     --exclude='./lablivre-*.tar.gz' \
     --exclude='./*.swp' \
@@ -74,23 +78,42 @@ chmod 755 "$TMP/$PACOTE/opt/lablivre/tests/"*.sh 2>/dev/null || true
 echo ">> Empacotando..."
 dpkg-deb --build --root-owner-group "$TMP/$PACOTE"
 
-mv "$TMP/$PACOTE.deb" .
+# Pasta dist/: só a versão atual (as antigas ficam no histórico do git
+# e nas Releases do GitHub)
+mkdir -p dist
+rm -f dist/lablivre_*_all.deb dist/lablivre-*.tar.gz
+mv "$TMP/$PACOTE.deb" dist/
 rm -rf "$TMP"
 
+# Projeto compactado: os arquivos do git (sem dados locais nem dist/)
+echo ">> Compactando o projeto..."
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    TMPT=$(mktemp -d)
+    mkdir "$TMPT/lablivre-$VERSAO"
+    # arquivos versionados + novos ainda não commitados, respeitando o .gitignore
+    git ls-files -z --cached --others --exclude-standard | grep -zv '^dist/' | \
+        xargs -0 -I{} sh -c '[ -e "$1" ] && cp --parents -p "$1" "$2"' _ {} "$TMPT/lablivre-$VERSAO"
+    tar -czf "dist/lablivre-$VERSAO.tar.gz" -C "$TMPT" "lablivre-$VERSAO"
+    rm -rf "$TMPT"
+else
+    echo "   (fora de um clone git: o .tar.gz não foi gerado)"
+fi
+
 # Mostra info
-TAMANHO=$(du -h "$PACOTE.deb" | awk '{print $1}')
+TAMANHO=$(du -h "dist/$PACOTE.deb" | awk '{print $1}')
 
 echo ""
 echo "═══════════════════════════════════════════════════════"
-echo "✓ Pacote gerado: $PACOTE.deb ($TAMANHO)"
+echo "✓ Pacote gerado: dist/$PACOTE.deb ($TAMANHO)"
+[ -f "dist/lablivre-$VERSAO.tar.gz" ] && echo "✓ Projeto:       dist/lablivre-$VERSAO.tar.gz ($(du -h "dist/lablivre-$VERSAO.tar.gz" | awk '{print $1}'))"
 echo "═══════════════════════════════════════════════════════"
 echo ""
 echo "Para instalar:"
-echo "  sudo apt install ./$PACOTE.deb"
+echo "  sudo apt install ./dist/$PACOTE.deb"
 echo ""
 echo "Para distribuir:"
-echo "  scp $PACOTE.deb usuario@servidor:~"
+echo "  scp dist/$PACOTE.deb usuario@servidor:~"
 echo ""
 echo "Para validar (sem instalar):"
-echo "  dpkg-deb -I $PACOTE.deb     # info do pacote"
-echo "  dpkg-deb -c $PACOTE.deb     # lista arquivos"
+echo "  dpkg-deb -I dist/$PACOTE.deb     # info do pacote"
+echo "  dpkg-deb -c dist/$PACOTE.deb     # lista arquivos"

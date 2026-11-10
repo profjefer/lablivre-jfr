@@ -412,5 +412,41 @@ SAIDA=$(printf 'SIM\n' | roda bash modulos/limpar_downloads.sh 2>&1)
 assert_ok "limpeza: resumo com limpas / falharam / itens" "grep -q '^Resumo: 🟢 2 máquina(s) limpa(s) · 🔴 0 falharam' <<< \"\$SAIDA\""
 assert_ok "barra de progresso gráfica não escapa texto (&gt;)" "! grep -q 'x_escapar)\"' '$PROJ_DIR/xmodulos/_xmotor.sh'"
 
+# ================================================================
+echo ""
+echo "[42-10] 4.2.7: macs.txt sobrevive à reinstalação, gitinstall"
+# ================================================================
+PM="$T42/pm"; mkdir -p "$PM/lab/configs" "$PM/legado"
+pm() { LAB_DIR="$PM/lab" LAB_BACKUP_DIR="$PM/var" LAB_HOME_BACKUP="$PM/home" LAB_LEGADO="$PM/legado/macs-lablivre.txt" bash "$PROJ_DIR/modulos/_preservar_macs.sh" "$@"; }
+printf '# lab\naa:00:00:00:00:01  pc01\naa:00:00:00:00:02  pc02\n' > "$PM/lab/configs/macs.txt"
+pm salvar >/dev/null
+assert_ok "salvar: cópia fora do /opt e na pasta pessoal" "cmp -s '$PM/lab/configs/macs.txt' '$PM/var/macs.txt' && cmp -s '$PM/lab/configs/macs.txt' '$PM/home/macs.txt'"
+: > "$PM/lab/configs/macs.txt"; pm salvar >/dev/null
+assert_ok "salvar: arquivo vazio não apaga a cópia boa" "grep -q pc02 '$PM/var/macs.txt'"
+SAIDA=$(pm restaurar)
+assert_ok "restaurar: macs.txt vazio volta da cópia" "grep -q pc02 '$PM/lab/configs/macs.txt' && grep -q RESTAURADO <<< \"\$SAIDA\""
+printf 'bb:00:00:00:00:09  outro\n' > "$PM/lab/configs/macs.txt"; pm restaurar >/dev/null
+assert_ok "restaurar: macs.txt com MACs não é mexido" "grep -q outro '$PM/lab/configs/macs.txt' && ! grep -q pc02 '$PM/lab/configs/macs.txt'"
+printf '# só comentário\n' > "$PM/lab/configs/macs.txt"; pm restaurar >/dev/null
+assert_ok "restaurar: só comentários conta como vazio (guarda o antigo)" "grep -q pc02 '$PM/lab/configs/macs.txt' && [ -f '$PM/lab/configs/macs.txt.antes_de_restaurar' ]"
+rm -rf "$PM/var" "$PM/home"; : > "$PM/lab/configs/macs.txt"
+printf 'cc:00:00:00:00:07  tocha\n' > "$PM/legado/macs-lablivre.txt"
+SAIDA=$(pm restaurar)
+assert_ok "restaurar: sem cópias, usa a instalação antiga (scriptlab)" "grep -q tocha '$PM/lab/configs/macs.txt' && grep -q 'legado/macs-lablivre.txt' <<< \"\$SAIDA\""
+for i in $(seq 1 13); do printf 'aa:00:00:00:00:%02d  pc%s\n' "$i" "$i" > "$PM/lab/configs/macs.txt"; pm salvar >/dev/null; sleep 0.01; touch -d "-$((20-i)) min" "$PM"/var/macs_*.txt 2>/dev/null; done
+assert_ok "salvar: guarda no máximo 10 versões antigas" "[ \$(ls '$PM'/var/macs_*.txt | wc -l) -le 10 ]"
+: > "$PM/lab/configs/macs.txt"; rm -rf "$PM/var" "$PM/home" "$PM/legado"
+assert_ok "restaurar: sem nada, avisa e não falha" "pm restaurar | grep -q 'sem cópia'"
+
+D="$PROJ_DIR/packaging/debian/DEBIAN"
+assert_ok "pacote: preinst, postinst e postrm válidos" "bash -n '$D/preinst' && bash -n '$D/postinst' && bash -n '$D/postrm'"
+assert_ok "pacote: build inclui o preinst" "grep -q 'for s in preinst postinst postrm' '$PROJ_DIR/packaging/build_deb.sh'"
+assert_ok "pacote: postinst restaura antes de dar posse e salva depois" "grep -n '_preservar_macs.sh restaurar' '$D/postinst' | grep -q . && grep -q '_preservar_macs.sh salvar' '$D/postinst'"
+assert_ok "pacote: postrm guarda o macs.txt antes do purge" "awk '/salvar_macs \\|\\| true/{a=NR} /rm -rf \\/opt\\/lablivre/{b=NR} END{exit !(a && b && a<b)}' '$D/postrm'"
+assert_ok "pacote: postinst não dá touch num macs.txt existente" "! grep -qE '^touch .*macs.txt' '$D/postinst'"
+assert_ok "gitinstall: git roda como o operador (não sudo git)" "! grep -qE 'sudo git ' '$PROJ_DIR/gitinstall.sh' && grep -q 'como_operador git' '$PROJ_DIR/gitinstall.sh'"
+assert_ok "gitinstall: na raiz do repositório e restaura o macs.txt" "[ -f '$PROJ_DIR/gitinstall.sh' ] && [ -f '$PROJ_DIR/menu.sh' ] && grep -q '_preservar_macs.sh\" restaurar' '$PROJ_DIR/gitinstall.sh'"
+assert_ok "git: macs.txt e lablivre.conf ficam fora do repositório" "grep -qx 'configs/macs.txt' '$PROJ_DIR/.gitignore' && grep -qx 'configs/lablivre.conf' '$PROJ_DIR/.gitignore'"
+
 rm -rf "$T42"
 cd "$PROJ_DIR"

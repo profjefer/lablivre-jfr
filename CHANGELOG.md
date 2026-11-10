@@ -7,6 +7,27 @@ e o projeto adota [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [4.2.7] — 2026-11-10
+
+Instalação e repositório: o `macs.txt` não se perde mais e a instalação via Git voltou a funcionar.
+
+### Corrigido
+- **O `macs.txt` sumia ao reinstalar do zero** (`apt purge`, `rm -rf /opt/lablivre`, máquina nova). Era preciso copiá-lo de volta à mão do `/opt/scriptlab-jfr`. Agora o arquivo é guardado fora do `/opt` e volta sozinho (ver *Adicionado*).
+- **Instalação via Git quebrada**: o `curl .../gitinstall.sh` dava 404, porque o código estava numa subpasta do repositório. Com a subpasta, os comandos `lablivre` e `lablivre-gui` também apontavam para arquivos que não existiam. O código agora fica na raiz.
+- **`gitinstall.sh` atualizando**: rodava `sudo git pull` numa pasta do usuário, e o git recusava (*dubious ownership*). O git agora roda como o operador. Se a máquina já tem o pacote `.deb`, o instalador explica como trocar, em vez de misturar os dois.
+- A instalação (`postinst`, opção 99) não muda mais a data do `macs.txt` com `touch`.
+
+### Adicionado
+- **`modulos/_preservar_macs.sh`** (`salvar` / `restaurar`):
+  - **salvar**: guarda o `macs.txt` em `/var/backups/lablivre/`, com as 10 versões anteriores, e em `~/.local/share/lablivre/`. Nunca troca uma cópia boa por um arquivo vazio.
+  - **restaurar**: se o `macs.txt` estiver vazio ou só com comentários, traz a primeira cópia que tiver MACs. A ordem é: as cópias acima, depois `configs/.backups/`, depois o `/opt/scriptlab-jfr/configs/macs-lablivre.txt` (e o `macs.txt` de lá). O arquivo anterior fica em `macs.txt.antes_de_restaurar`.
+- O pacote ganhou um **`preinst`**, que salva antes de instalar ou atualizar. O `postinst` restaura e salva, e o `postrm` salva antes do `remove` ou do `purge`. O `gitinstall.sh` também restaura e salva, e o backup semanal (cron) atualiza a cópia em `~/.local/share/lablivre/`.
+- **Repositório reorganizado**: código na raiz, e o `.deb` e o projeto compactado (`.tar.gz`) da versão atual em `dist/`. O `packaging/build_deb.sh` gera os dois em `dist/`.
+- README: nova descrição do projeto, instalação e atualização pelas duas opções e o funcionamento das cópias do `macs.txt`.
+- Testes: 190 asserções.
+
+---
+
 ## [4.2.6] — 2026-11-03
 
 ### Corrigido

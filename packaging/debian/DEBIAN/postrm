@@ -5,6 +5,20 @@ set -e
 # postrm — Após remover o pacote
 # ============================================================
 
+# Guarda o macs.txt fora do /opt (autocontido: os módulos do pacote
+# já foram apagados quando o postrm roda). Sobrevive ao purge.
+salvar_macs() {
+    local m=/opt/lablivre/configs/macs.txt d=/var/backups/lablivre
+    grep -qE '^[[:space:]]*([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}[[:space:]]+[^[:space:]]' "$m" 2>/dev/null || return 0
+    mkdir -p "$d" && chmod 755 "$d"
+    cmp -s "$m" "$d/macs.txt" && return 0
+    [ -f "$d/macs.txt" ] && cp -p "$d/macs.txt" "$d/macs_$(date '+%Y%m%d_%H%M%S').txt"
+    cp -p "$m" "$d/macs.txt"
+    ls -t "$d"/macs_*.txt 2>/dev/null | tail -n +11 | xargs -r rm -f
+}
+
+case "$1" in remove|purge) salvar_macs || true ;; esac
+
 # Sempre remove os symlinks (em remove e purge)
 rm -f /usr/local/bin/lablivre
 rm -f /usr/local/bin/lablivre-gui
@@ -32,6 +46,11 @@ fi
 if [ "$1" = "purge" ]; then
     rm -rf /opt/lablivre
     echo "[postrm] LabLivre removido completamente (purge)."
+    if [ -f /var/backups/lablivre/macs.txt ]; then
+        echo "          O macs.txt foi guardado em /var/backups/lablivre/ e volta"
+        echo "          sozinho se o LabLivre for instalado de novo."
+        echo "          Para apagar também: sudo rm -rf /var/backups/lablivre"
+    fi
 else
     # Em remoção simples: mantém configs e dados, mas avisa
     echo "[postrm] LabLivre removido."

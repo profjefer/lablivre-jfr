@@ -20,7 +20,7 @@ BASE_DIR="$(pwd)"
 # 1. ESTRUTURA DE PASTAS
 # ============================================================
 mkdir -p logs modulos xmodulos configs web docs envia_material dashboards/html
-touch configs/macs.txt 2>/dev/null
+[ -e configs/macs.txt ] || touch configs/macs.txt 2>/dev/null
 
 # ============================================================
 # 1.5. SEGURANÇA: proteger arquivos sensíveis
