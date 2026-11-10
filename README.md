@@ -4,7 +4,7 @@ Sistema de administração remota para laboratórios Linux (Ubuntu 24.04+).
 Controla todas as máquinas do laboratório a partir da máquina do professor, via SSH,
 **sem instalar nada nos alunos** (modelo *agentless*).
 
-**Versão atual:** 4.2.1 · Software livre · UFPR Palotina · **somente IPv4**
+**Versão atual:** 4.2.6 · Software livre · UFPR Palotina · **somente IPv4**
 
 ---
 
@@ -12,7 +12,7 @@ Controla todas as máquinas do laboratório a partir da máquina do professor, v
 
 ### Opção A — Pacote .deb (recomendado)
 ```bash
-sudo apt install ./lablivre_4.2.1_all.deb
+sudo apt install ./lablivre_4.2.6_all.deb
 ```
 
 ### Opção B — Via Git
@@ -34,7 +34,15 @@ lablivre        # → opção 99
 
 # 3. Mapeie a rede
 lablivre        # → opção 1
+
+# 4. Confira se ficou tudo de pé (cron, servidor web, serviços)
+lablivre        # → opção 17
 ```
+
+> **Veio de uma instalação antiga** (scriptlab, `/opt/scriptlab-jfr`…)? Ela pode ter
+> deixado um servidor web na porta 8080 e tarefas no cron apontando para a pasta velha.
+> Os sintomas são: o portal mostra uma lista de arquivos, os painéis dizem "todas offline"
+> e o inventário dá "Error response". A opção **17** detecta e corrige isso.
 
 ---
 
@@ -70,23 +78,45 @@ d0:94:66:e1:81:57    lula-molusco
 | 3 | **Modo Prova.** Bloqueia a internet IPv4 e mantém a rede local; persiste no reboot e tem validade máxima ([detalhes](docs/MODO_PROVA.md)) |
 | 4 | **Inventário:** série, modelo, CPU, RAM, disco, GPU, BIOS, Wake-on-LAN, USB, Python/Node… (TXT + HTML) |
 | 5 | **Mensagem:** pop-up na tela, terminal (`wall`) ou os dois |
-| 6 | **Ligar** o laboratório (Wake-on-LAN) |
-| 7 | **Desligar** o laboratório (pula a máquina do professor) |
+| 6 | **Ligar** o laboratório (Wake-on-LAN): 3 rodadas, broadcast da sub-rede, todas as placas do `macs.txt`; pode esperar e dizer quem não ligou |
+| 7 | **Desligar** o laboratório (pula a máquina do professor). **Arma o Wake-on-LAN** de cada máquina antes de desligar |
 | 8 | **Manutenção APT** (update/upgrade/instalar pacote) |
 | 9 | **Corrigir repositórios** quebrados (vacina APT) |
-| 10 | **Diagnosticar conexão SSH** (ping → porta 22 → autenticação) |
+| 10 | **Diagnosticar conexão SSH**: rede → ping → porta 22 → login → sudo → nome. Diz o que fazer em cada falha (ex.: máquina que não aceita senha) |
 | 11 | **Ver auditoria** (`logs/auditoria.jsonl`) |
 | 12 | **Configurar chave SSH** (dispensa a senha do SSH) |
 | 13 | **Abrir o portal web** (dashboards e inventário) |
 | 14 | **Relatório de status** (TXT rápido) |
 | 15 | **Limpar Downloads e Lixeira** de todas as máquinas |
 | 16 | **Sincronizar horário** (NTP; se não houver NTP, usa a hora do orquestrador) |
+| 17 | **Saúde do sistema:** instalação, `macs.txt`, dependências, idade do mapa, servidor web (inclusive o de instalação antiga na porta 8080), cron e serviços. Oferece corrigir |
+| 18 | **Preparar Wake-on-LAN** (permanente): ethtool, `wol g`, serviço que rearma no boot, NetworkManager |
 | 99 | **Configurações globais** (nome do lab, usuário, senha, pasta de material) |
 
 Os módulos que agem nas máquinas aceitam `--dry-run` (só mostram o que fariam). Para simular tudo: `lablivre --dry-run`.
 
-O menu gráfico (`lablivre-gui`) oferece as mesmas funções. O mapeamento, o Modo Prova e o
-horário dele usam exatamente o mesmo motor do modo texto.
+O menu gráfico (`lablivre-gui`) oferece as mesmas funções. Mapeamento, Modo Prova, horário,
+mensagem, ligar, desligar, diagnóstico e inventário usam **exatamente o mesmo motor** do modo
+texto: as janelas só mostram o andamento e o resultado.
+
+### Páginas web (sempre por `http://localhost:8080`)
+
+O Firefox do Ubuntu (snap) não abre arquivos de `/opt` por `file://`, então o LabLivre
+abre todas as páginas pelo servidor da porta 8080 (`modulos/servidor_web.py`).
+
+**Sempre atuais:** com uma página de estado aberta, a rede é remapeada sozinha sempre que o
+mapa passa de 5 minutos. Também há o botão "Atualizar agora". O painel do **Modo Prova tem
+botões** (ativar, liberar, reaplicar, situação real), que só aparecem na máquina do professor
+ou nos IPs de `LAB_WEB_ADMINS`. A opção 13 mostra o endereço com o IP real
+(`http://<ip>:8080`), que serve também quando você acessa por SSH.
+
+| Página | O que mostra |
+|---|---|
+| `index.html` | Portal com todos os painéis |
+| `maquinas.html` | **Tabela única e sempre atual** das máquinas (substitui os antigos `relatorio_*.html` e `status.html`). Avisa quando o mapa está velho |
+| `dashboard_*.html` | Operacional, TV, Prova, NetOps, Auditoria |
+| `inventario.html` | Hardware (aparece um aviso até a primeira coleta) |
+| `mapa_calor.html` | Uso das máquinas ao longo do tempo |
 
 ---
 
@@ -140,6 +170,9 @@ LAB_IDIOMA="pt_BR"
 # Modo Prova (opcionais)
 LAB_PROVA_REDES="10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 200.236.0.0/16"
 LAB_PROVA_HORAS="4"
+
+# Portal web (opcional): IPs que também podem usar os botões do Modo Prova
+LAB_WEB_ADMINS="10.158.28.50"
 ```
 
 Para alterar, use a opção **99** (ela preserva as outras variáveis) ou edite o arquivo.

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabLivre — Máquinas</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg:#0a0a0f; --card:#14141d; --border:rgba(255,255,255,0.08); --text:#f5f5f7; --dim:#8b8b9b;
+        --green:#4ade80; --red:#f87171; --amber:#fbbf24; --accent:#6366f1; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text);
+       min-height: 100vh; padding: 40px 24px; }
+body::before { content:''; position:fixed; inset:0; pointer-events:none;
+  background: radial-gradient(circle at 15% 10%, rgba(99,102,241,0.14) 0%, transparent 45%),
+              radial-gradient(circle at 85% 90%, rgba(168,85,247,0.10) 0%, transparent 45%); }
+.wrap { max-width: 1100px; margin: 0 auto; position: relative; }
+.top { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:24px; }
+h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; }
+h1 span { background: linear-gradient(135deg,#6366f1,#a855f7); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.sub { color: var(--dim); font-size: 17px; margin-top: 6px; }
+.voltar { cursor:pointer; background:none; font:inherit; color: var(--dim); text-decoration: none; font-size: 17px; border:1px solid var(--border); padding:8px 14px; border-radius:10px; }
+.voltar:hover { color: var(--text); border-color: var(--accent); }
+.resumo { display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 20px; }
+.chip { background: var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 20px; min-width:130px; }
+.chip b { display:block; font-size: 28px; font-weight: 800; }
+.chip small { color: var(--dim); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+.chip.on b { color: var(--green); } .chip.off b { color: var(--red); }
+.aviso { display:none; background: rgba(251,191,36,0.10); border:1px solid rgba(251,191,36,0.5); color: var(--amber);
+         border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; font-size: 17px; }
+.ferr { display:flex; gap:10px; margin-bottom: 14px; flex-wrap:wrap; }
+.ferr input { flex:1; min-width:200px; background: var(--card); border:1px solid var(--border); color: var(--text);
+              border-radius:10px; padding:10px 14px; font-size:17px; }
+.ferr button { background: var(--card); border:1px solid var(--border); color: var(--dim); border-radius:10px; padding:10px 14px; cursor:pointer; font-size:16px; }
+.ferr button.ativo { color: var(--text); border-color: var(--accent); }
+table { width:100%; border-collapse: collapse; background: var(--card); border:1px solid var(--border); border-radius: 14px; overflow:hidden; }
+th, td { text-align:left; padding: 11px 16px; font-size: 17px; border-bottom: 1px solid var(--border); }
+th { color: var(--dim); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; cursor:pointer; user-select:none; }
+tr:last-child td { border-bottom: 0; }
+td.mono { font-family: ui-monospace, 'JetBrains Mono', monospace; font-size: 16px; color: #c4c4d4; }
+.st { display:inline-flex; align-items:center; gap:8px; font-weight:600; }
+.st::before { content:''; width:9px; height:9px; border-radius:50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.st.online { color: var(--green); } .st.offline { color: var(--red); }
+.tag { font-size: 13px; color: var(--accent); border:1px solid rgba(99,102,241,.5); border-radius: 6px; padding: 1px 6px; margin-left: 8px; }
+footer { color: var(--dim); font-size: 14px; margin-top: 18px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1><span>Máquinas</span> do laboratório</h1>
+      <div class="sub" id="sub">Carregando…</div>
+    </div>
+    <div><button class="voltar" id="b-atualizar">⟳ Atualizar agora</button>
+    <a class="voltar" href="index.html">← Portal</a></div>
+  </div>
+
+  <div class="aviso" id="aviso"></div>
+
+  <div class="resumo">
+    <div class="chip"><b id="n-total">–</b><small>Total</small></div>
+    <div class="chip on"><b id="n-on">–</b><small>Online</small></div>
+    <div class="chip off"><b id="n-off">–</b><small>Offline</small></div>
+  </div>
+
+  <div class="ferr">
+    <input id="busca" placeholder="Filtrar por nome, IP ou MAC…">
+    <button data-f="todas" class="ativo">Todas</button>
+    <button data-f="online">Online</button>
+    <button data-f="offline">Offline</button>
+  </div>
+
+  <table>
+    <thead><tr><th data-c="nome">Máquina</th><th data-c="status">Situação</th><th data-c="ip">IP</th><th data-c="mac">MAC</th></tr></thead>
+    <tbody id="linhas"></tbody>
+  </table>
+  <footer>Uma página só, sempre atual: com ela aberta, a rede é remapeada sempre que o mapa passar de 5 minutos.</footer>
+</div>
+
+<script src="lablivre.js"></script>
+<script>
+let dados = [], filtro = 'todas', ordem = 'nome';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function desenhar() {
+  const q = document.getElementById('busca').value.toLowerCase();
+  const linhas = dados
+    .filter(m => filtro === 'todas' || m.status === filtro)
+    .filter(m => !q || (m.nome + ' ' + m.ip + ' ' + m.mac).toLowerCase().includes(q))
+    .sort((a, b) => String(a[ordem]).localeCompare(String(b[ordem]), 'pt', {numeric: true}));
+  document.getElementById('linhas').innerHTML = linhas.map(m => `
+    <tr>
+      <td>${esc(m.nome)}${m.esta_maquina ? '<span class="tag">esta máquina</span>' : ''}</td>
+      <td><span class="st ${m.status}">${m.status === 'online' ? 'Online' : 'Offline'}</span></td>
+      <td class="mono">${m.status === 'online' ? esc(m.ip) : '—'}</td>
+      <td class="mono">${esc(m.mac)}${m.via ? `<br><span class="tag" style="margin:0" title="O cabo não respondeu; respondeu a 2ª placa do macs.txt">online pela 2ª placa (wifi) ${esc(m.via)}</span>` : ''}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:var(--dim)">Nenhuma máquina.</td></tr>';
+}
+
+async function carregar() {
+  try {
+    const r = await fetch('api.json?t=' + Date.now());
+    const d = await r.json();
+    dados = d.maquinas || [];
+    document.getElementById('n-total').textContent = d.rede.total;
+    document.getElementById('n-on').textContent = d.rede.online;
+    document.getElementById('n-off').textContent = d.rede.offline;
+    const quando = d.lab.ips_atualizado_em || '';
+    document.getElementById('sub').textContent = `${d.lab.nome} · mapa da rede ${LabLivre.idade(quando) || 'sem data'} (${quando})`;
+    const aviso = document.getElementById('aviso');
+    const t = Date.parse(quando.replace(' ', 'T'));
+    const min = isNaN(t) ? null : Math.round((Date.now() - t) / 60000);
+    if (min !== null && min > 70) {
+      aviso.style.display = 'block';
+      aviso.textContent = `⚠ Este mapa tem ${min} minutos e não está sendo renovado. Clique em "Atualizar agora" ou rode a opção 17 (Saúde do sistema).`;
+    } else { aviso.style.display = 'none'; }
+    desenhar();
+  } catch (e) {
+    document.getElementById('sub').textContent = 'Não consegui ler o api.json — rode a opção 1 (Mapear Rede).';
+  }
+}
+document.getElementById('busca').addEventListener('input', desenhar);
+document.querySelectorAll('.ferr button').forEach(b => b.addEventListener('click', () => {
+  filtro = b.dataset.f;
+  document.querySelectorAll('.ferr button').forEach(x => x.classList.toggle('ativo', x === b));
+  desenhar();
+}));
+document.querySelectorAll('th').forEach(th => th.addEventListener('click', () => { ordem = th.dataset.c; desenhar(); }));
+carregar(); setInterval(carregar, 30000);
+LabLivre.manterAtual(carregar);
+document.getElementById('b-atualizar').onclick = () => LabLivre.atualizarAgora(carregar);
+</script>
+</body>
+</html>
