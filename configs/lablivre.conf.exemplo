@@ -16,3 +16,6 @@ LAB_PROVA_HORAS="4"
 # Portal web: outros IPs que podem usar os botões do Modo Prova
 # (além da própria máquina do professor). Ex.: o seu notebook.
 #LAB_WEB_ADMINS="10.158.28.50"
+
+# Ligar (opção 6): segundos de espera antes de conferir quem ligou
+# LAB_ESPERA_LIGAR="20"

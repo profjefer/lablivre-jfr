@@ -125,7 +125,7 @@ d0:94:66:e1:81:57    lula-molusco
 | 3 | **Modo Prova.** Bloqueia a internet IPv4 e mantém a rede local; persiste no reboot e tem validade máxima ([detalhes](docs/MODO_PROVA.md)) |
 | 4 | **Inventário:** série, modelo, CPU, RAM, disco, GPU, BIOS, Wake-on-LAN, USB, Python/Node… (TXT + HTML) |
 | 5 | **Mensagem:** pop-up na tela, terminal (`wall`) ou os dois |
-| 6 | **Ligar** o laboratório (Wake-on-LAN): 3 rodadas, broadcast da sub-rede, todas as placas do `macs.txt`; pode esperar e dizer quem não ligou |
+| 6 | **Ligar** o laboratório (Wake-on-LAN): 3 rodadas, broadcast da sub-rede, todas as placas do `macs.txt`; espera 20 s (`LAB_ESPERA_LIGAR`) e diz quem não ligou |
 | 7 | **Desligar** o laboratório (pula a máquina do professor). **Arma o Wake-on-LAN** de cada máquina antes de desligar |
 | 8 | **Manutenção APT** (update/upgrade/instalar pacote) |
 | 9 | **Corrigir repositórios** quebrados (vacina APT) |

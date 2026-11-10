@@ -20,6 +20,7 @@ Instalação e repositório: o `macs.txt` não se perde mais e a instalação vi
 - **Instalação via Git quebrada**: o `curl .../gitinstall.sh` dava 404, porque o código estava numa subpasta do repositório. Com a subpasta, os comandos `lablivre` e `lablivre-gui` também apontavam para arquivos que não existiam. O código agora fica na raiz.
 - **`gitinstall.sh` atualizando**: rodava `sudo git pull` numa pasta do usuário, e o git recusava (*dubious ownership*). O git agora roda como o operador. Se a máquina já tem o pacote `.deb`, o instalador explica como trocar, em vez de misturar os dois.
 - A instalação (`postinst`, opção 99) não muda mais a data do `macs.txt` com `touch`.
+- **Ligar (opção 6) esperava 90 s** antes de conferir quem ligou: agora são **20 s**, no menu texto e no gráfico. O valor pode ser ajustado com `LAB_ESPERA_LIGAR` no `lablivre.conf`.
 
 ### Adicionado
 - **`modulos/_preservar_macs.sh`** (`salvar` / `restaurar`):

@@ -4,7 +4,7 @@
 #
 #   bash modulos/ligar_labold.sh                 → todas do macs.txt
 #   bash modulos/ligar_labold.sh donatelo thor   → só as citadas
-#   bash modulos/ligar_labold.sh --esperar 90    → espera e remapeia
+#   bash modulos/ligar_labold.sh --esperar 20    → espera e remapeia
 #   bash modulos/ligar_labold.sh --sem-esperar   → só envia
 #
 # Desde 4.2.2:
@@ -26,11 +26,15 @@ source modulos/_comum.sh || exit 1
 source modulos/_log.sh 2>/dev/null || true
 
 RODADAS=3
+# Espera padrão antes de conferir quem ligou (LAB_ESPERA_LIGAR no lablivre.conf)
+[ -z "${LAB_ESPERA_LIGAR:-}" ] && LAB_ESPERA_LIGAR=$(sed -n 's/^LAB_ESPERA_LIGAR="\{0,1\}\([0-9]*\)"\{0,1\}[[:space:]]*$/\1/p' configs/lablivre.conf 2>/dev/null | tail -n 1)
+ESPERA_PADRAO="${LAB_ESPERA_LIGAR:-20}"
+[[ "$ESPERA_PADRAO" =~ ^[0-9]+$ ]] || ESPERA_PADRAO=20
 ESPERAR=""          # vazio = perguntar (no terminal) | 0 = não | N = segundos
 ALVOS=()
 while [ $# -gt 0 ]; do
     case "$1" in
-        --esperar)     ESPERAR="${2:-90}"; shift ;;
+        --esperar)     ESPERAR="${2:-$ESPERA_PADRAO}"; shift ;;
         --sem-esperar) ESPERAR=0 ;;
         --dry-run|-n)  DRYRUN=1 ;;
         *)             ALVOS+=("$1") ;;
@@ -94,8 +98,8 @@ echo "[ENVIADO] Pacotes enviados para ${#NOMES_ALVO[@]} máquina(s)."
 # ----------------------------------------------------------------
 if [ -z "$ESPERAR" ]; then
     if [ -t 0 ]; then
-        read -r -p "Esperar 90 s e conferir quem ligou? (S/n): " R
-        [[ "${R,,}" == "n" ]] && ESPERAR=0 || ESPERAR=90
+        read -r -p "Esperar ${ESPERA_PADRAO} s e conferir quem ligou? (S/n): " R
+        [[ "${R,,}" == "n" ]] && ESPERAR=0 || ESPERAR=$ESPERA_PADRAO
     else
         ESPERAR=0
     fi
