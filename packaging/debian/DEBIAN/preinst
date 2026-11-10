@@ -19,5 +19,26 @@ salvar_macs() {
     echo "[preinst] Cópia do macs.txt em $d/macs.txt"
 }
 
+# Guarda o que a opção 99 configurou fora do /opt: serviço web, serviços
+# wol-* e as tarefas do cron. O postrm das versões até a 4.2.7 apagava
+# tudo isso também numa ATUALIZAÇÃO; o postinst recoloca o que sumir.
+# (Na atualização, este preinst roda ANTES do postrm da versão antiga.)
+guardar_estado() {
+    local d=/var/backups/lablivre/estado u f linhas
+    [ -d /opt/lablivre ] || return 0
+    mkdir -p "$d" && chmod 755 /var/backups/lablivre "$d"
+    for f in /etc/systemd/system/lablivre-web.service /etc/systemd/system/wol-*.service; do
+        [ -f "$f" ] && cp -p "$f" "$d/"
+    done
+    u=$(stat -c %U /opt/lablivre 2>/dev/null)
+    if [ -n "$u" ] && [ "$u" != root ] && [ "$u" != UNKNOWN ]; then
+        linhas=$(crontab -u "$u" -l 2>/dev/null | grep "# LabLivre" || true)
+        # só troca a cópia se houver tarefas (não perde uma cópia boa)
+        [ -n "$linhas" ] && printf '%s\n' "$linhas" > "$d/cron.txt" && echo "$u" > "$d/usuario"
+    fi
+    return 0
+}
+
 salvar_macs || true
+guardar_estado || true
 exit 0

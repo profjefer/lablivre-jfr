@@ -439,11 +439,26 @@ assert_ok "salvar: guarda no máximo 10 versões antigas" "[ \$(ls '$PM'/var/mac
 assert_ok "restaurar: sem nada, avisa e não falha" "pm restaurar | grep -q 'sem cópia'"
 
 D="$PROJ_DIR/packaging/debian/DEBIAN"
+# packaging/ só existe no código-fonte (o .deb não instala essa pasta)
+if [ -d "$D" ]; then
 assert_ok "pacote: preinst, postinst e postrm válidos" "bash -n '$D/preinst' && bash -n '$D/postinst' && bash -n '$D/postrm'"
 assert_ok "pacote: build inclui o preinst" "grep -q 'for s in preinst postinst postrm' '$PROJ_DIR/packaging/build_deb.sh'"
 assert_ok "pacote: postinst restaura antes de dar posse e salva depois" "grep -n '_preservar_macs.sh restaurar' '$D/postinst' | grep -q . && grep -q '_preservar_macs.sh salvar' '$D/postinst'"
 assert_ok "pacote: postrm guarda o macs.txt antes do purge" "awk '/salvar_macs \\|\\| true/{a=NR} /rm -rf \\/opt\\/lablivre/{b=NR} END{exit !(a && b && a<b)}' '$D/postrm'"
 assert_ok "pacote: postinst não dá touch num macs.txt existente" "! grep -qE '^touch .*macs.txt' '$D/postinst'"
+# postrm chamado numa ATUALIZAÇÃO não pode apagar serviço, cron nem atalhos
+PR="$T42/postrm"; mkdir -p "$PR"
+for c in rm systemctl crontab; do printf '#!/bin/bash\necho "%s $*" >> "%s/chamadas"\n' "$c" "$PR" > "$PR/$c"; chmod +x "$PR/$c"; done
+for arg in upgrade failed-upgrade abort-install abort-upgrade; do PATH="$PR:/usr/bin:/bin" bash "$D/postrm" "$arg" >/dev/null 2>&1; done
+assert_ok "pacote: postrm numa atualização não apaga serviço, cron nem atalhos" "[ ! -s '$PR/chamadas' ]"
+PATH="$PR:/usr/bin:/bin" bash "$D/postrm" remove >/dev/null 2>&1
+assert_ok "pacote: postrm num remove apaga serviço e atalhos" "grep -q 'lablivre-web.service' '$PR/chamadas' && grep -q '/usr/local/bin/lablivre' '$PR/chamadas'"
+assert_ok "pacote: preinst guarda serviço web, wol-* e cron antes da atualização" "grep -q 'lablivre-web.service /etc/systemd/system/wol-' '$D/preinst' && grep -q 'cron.txt' '$D/preinst'"
+assert_ok "pacote: postinst recoloca serviço e cron que a versão antiga apagou" "grep -q 'ESTADO=/var/backups/lablivre/estado' '$D/postinst' && grep -q 'crontab -u \"\$U_CRON\" -' '$D/postinst'"
+assert_ok "pacote: postinst libera a porta 8080 antes de reiniciar o serviço" "grep -q 'fuser -k -n tcp 8080' '$D/postinst'"
+else
+echo "  (testes do pacote pulados: packaging/ não está nesta instalação)"
+fi
 assert_ok "gitinstall: git roda como o operador (não sudo git)" "! grep -qE 'sudo git ' '$PROJ_DIR/gitinstall.sh' && grep -q 'como_operador git' '$PROJ_DIR/gitinstall.sh'"
 assert_ok "gitinstall: na raiz do repositório e restaura o macs.txt" "[ -f '$PROJ_DIR/gitinstall.sh' ] && [ -f '$PROJ_DIR/menu.sh' ] && grep -q '_preservar_macs.sh\" restaurar' '$PROJ_DIR/gitinstall.sh'"
 assert_ok "git: macs.txt e lablivre.conf ficam fora do repositório" "grep -qx 'configs/macs.txt' '$PROJ_DIR/.gitignore' && grep -qx 'configs/lablivre.conf' '$PROJ_DIR/.gitignore'"

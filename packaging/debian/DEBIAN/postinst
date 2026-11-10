@@ -67,6 +67,32 @@ chmod 700 "$INSTALL_DIR"/logs 2>/dev/null || true
 ln -sf "$INSTALL_DIR"/menu.sh  /usr/local/bin/lablivre
 ln -sf "$INSTALL_DIR"/xmenu.sh /usr/local/bin/lablivre-gui
 
+# 6.5. Atualização a partir de uma versão antiga: o postrm dela (até a
+#      4.2.7) apagou o serviço web, os wol-* e o cron. O preinst guardou
+#      tudo em /var/backups/lablivre/estado: recoloca o que sumiu.
+ESTADO=/var/backups/lablivre/estado
+RESTAUROU=""
+if [ -d "$ESTADO" ]; then
+    for f in "$ESTADO"/lablivre-web.service "$ESTADO"/wol-*.service; do
+        [ -f "$f" ] || continue
+        alvo="/etc/systemd/system/$(basename "$f")"
+        if [ ! -f "$alvo" ]; then
+            cp -p "$f" "$alvo"
+            systemctl daemon-reload 2>/dev/null || true
+            systemctl enable "$(basename "$f")" >/dev/null 2>&1 || true
+            case "$f" in *wol-*) systemctl start "$(basename "$f")" >/dev/null 2>&1 || true ;; esac
+            RESTAUROU+=" $(basename "$f")"
+        fi
+    done
+    U_CRON=$(cat "$ESTADO/usuario" 2>/dev/null)
+    if [ -s "$ESTADO/cron.txt" ] && [ -n "$U_CRON" ] && id "$U_CRON" >/dev/null 2>&1 \
+       && ! crontab -u "$U_CRON" -l 2>/dev/null | grep -q "# LabLivre"; then
+        { crontab -u "$U_CRON" -l 2>/dev/null || true; cat "$ESTADO/cron.txt"; } | crontab -u "$U_CRON" - \
+            && RESTAUROU+=" cron($(grep -c . "$ESTADO/cron.txt") tarefas)"
+    fi
+fi
+[ -n "$RESTAUROU" ] && echo "[postinst] Restaurado (a versão anterior apagava na atualização):$RESTAUROU"
+
 # 7. Atualização: se o serviço web já existe (opção 99 rodada antes),
 #    passa a usar o servidor novo (API de atualização e do Modo Prova)
 #    e reinicia. Instalação nova: a opção 99 cria o serviço.
@@ -74,6 +100,12 @@ UNIT=/etc/systemd/system/lablivre-web.service
 if [ -f "$UNIT" ] && grep -q "WorkingDirectory=$INSTALL_DIR" "$UNIT"; then
     sed -i "s|^ExecStart=.*|ExecStart=/usr/bin/python3 $INSTALL_DIR/modulos/servidor_web.py --porta 8080|" "$UNIT"
     systemctl daemon-reload 2>/dev/null || true
+    systemctl enable lablivre-web.service >/dev/null 2>&1 || true
+    # um servidor avulso (aberto pelo menu enquanto o serviço não existia)
+    # segurando a 8080 impediria o serviço de subir
+    systemctl stop lablivre-web.service 2>/dev/null || true
+    command -v fuser >/dev/null 2>&1 && fuser -k -n tcp 8080 >/dev/null 2>&1 || true
+    sleep 1
     systemctl restart lablivre-web.service 2>/dev/null || true
 fi
 

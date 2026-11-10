@@ -19,7 +19,15 @@ salvar_macs() {
 
 case "$1" in remove|purge) salvar_macs || true ;; esac
 
-# Sempre remove os symlinks (em remove e purge)
+# Só numa remoção de verdade (remove/purge). Numa ATUALIZAÇÃO o dpkg
+# também chama o postrm da versão antiga, com "upgrade": antes da 4.2.7
+# isto apagava o serviço web, os wol-* e o cron a cada atualização.
+case "$1" in
+    remove|purge) ;;
+    *) exit 0 ;;
+esac
+
+# Remove os symlinks
 rm -f /usr/local/bin/lablivre
 rm -f /usr/local/bin/lablivre-gui
 
@@ -45,6 +53,7 @@ fi
 # Em PURGE (remoção completa): apaga tudo, inclusive dados gerados e configs
 if [ "$1" = "purge" ]; then
     rm -rf /opt/lablivre
+    rm -rf /var/backups/lablivre/estado   # serviço/cron guardados: não voltam após purge
     echo "[postrm] LabLivre removido completamente (purge)."
     if [ -f /var/backups/lablivre/macs.txt ]; then
         echo "          O macs.txt foi guardado em /var/backups/lablivre/ e volta"

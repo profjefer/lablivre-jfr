@@ -12,6 +12,10 @@ e o projeto adota [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 Instalação e repositório: o `macs.txt` não se perde mais e a instalação via Git voltou a funcionar.
 
 ### Corrigido
+- **Toda atualização do `.deb` apagava o cron, o serviço web e os serviços `wol-*`.** Numa atualização, o dpkg chama o `postrm` da versão antiga com o argumento `upgrade`, e o nosso removia tudo em qualquer chamada. Depois de atualizar, o mapeamento de hora em hora, o desligamento das 23h, o horário das 7h, o snapshot e o backup paravam, e o portal ficava sem serviço. Visto no lab na atualização 4.2.5 → 4.2.6. Agora:
+  - o `postrm` só remove isso num `remove` ou `purge`;
+  - para atualizações a partir de versões antigas, cujo `postrm` ainda apaga tudo: o `preinst` guarda o serviço web, os `wol-*` e as tarefas do cron em `/var/backups/lablivre/estado/`, e o `postinst` recoloca o que tiver sumido e avisa;
+  - o `postinst` libera a porta 8080 antes de reiniciar o serviço, porque um servidor avulso aberto pelo menu impedia o serviço de subir.
 - **O `macs.txt` sumia ao reinstalar do zero** (`apt purge`, `rm -rf /opt/lablivre`, máquina nova). Era preciso copiá-lo de volta à mão do `/opt/scriptlab-jfr`. Agora o arquivo é guardado fora do `/opt` e volta sozinho (ver *Adicionado*).
 - **Instalação via Git quebrada**: o `curl .../gitinstall.sh` dava 404, porque o código estava numa subpasta do repositório. Com a subpasta, os comandos `lablivre` e `lablivre-gui` também apontavam para arquivos que não existiam. O código agora fica na raiz.
 - **`gitinstall.sh` atualizando**: rodava `sudo git pull` numa pasta do usuário, e o git recusava (*dubious ownership*). O git agora roda como o operador. Se a máquina já tem o pacote `.deb`, o instalador explica como trocar, em vez de misturar os dois.
@@ -24,7 +28,7 @@ Instalação e repositório: o `macs.txt` não se perde mais e a instalação vi
 - O pacote ganhou um **`preinst`**, que salva antes de instalar ou atualizar. O `postinst` restaura e salva, e o `postrm` salva antes do `remove` ou do `purge`. O `gitinstall.sh` também restaura e salva, e o backup semanal (cron) atualiza a cópia em `~/.local/share/lablivre/`.
 - **Repositório reorganizado**: código na raiz, e o `.deb` e o projeto compactado (`.tar.gz`) da versão atual em `dist/`. O `packaging/build_deb.sh` gera os dois em `dist/`.
 - README: nova descrição do projeto, instalação e atualização pelas duas opções e o funcionamento das cópias do `macs.txt`.
-- Testes: 190 asserções.
+- Testes: 195 asserções.
 
 ---
 

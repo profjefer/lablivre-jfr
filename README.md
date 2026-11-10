@@ -34,7 +34,12 @@ wget https://github.com/profjefer/lablivre-jfr/raw/main/dist/lablivre_4.2.7_all.
 sudo apt install ./lablivre_4.2.7_all.deb
 ```
 
-**Para atualizar**, instale o pacote novo por cima, com o mesmo comando.
+**Para atualizar**, instale o pacote novo por cima, com o mesmo comando. O cron, o serviço
+web e o Wake-on-LAN configurados pela opção 99 continuam valendo.
+
+> Atualizando de uma versão **até a 4.2.6**? O pacote antigo apagava o cron e o serviço web
+> ao ser atualizado. A 4.2.7 recoloca os dois sozinha. Se eles já tinham sumido antes
+> (`crontab -l` sem linhas `# LabLivre`), rode a opção **99** ou a **17** uma vez.
 
 ### Opção B — Via Git
 
@@ -242,7 +247,7 @@ Para alterar, use a opção **99** (ela preserva as outras variáveis) ou edite 
 bash tests/run_tests.sh
 ```
 Os testes rodam com comandos simulados (SSH, sudo, iptables, systemd…), então não tocam a
-rede nem o sistema. São 190 asserções na 4.2.7.
+rede nem o sistema. São 195 asserções na 4.2.7.
 
 ---
 
