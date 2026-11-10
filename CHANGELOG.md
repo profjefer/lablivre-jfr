@@ -16,7 +16,9 @@ Do teste presencial no laboratório: rede das máquinas, dispositivos conhecidos
   - **verificar**: mostra, para cada máquina, a velocidade do cabo, o wifi e as redes wifi com conexão automática, e aponta quem está no cabo e no wifi. Pelo menu, depois pergunta se deve desligar.
   - **desligar-wifi**: tira a conexão automática de todas as redes wifi e desconecta o wifi, **só onde o cabo está funcionando** (link, IP e conexão ativa). Onde o cabo está com problema, o wifi fica e o motivo é mostrado.
   - **religar-wifi**: desfaz exatamente o que foi mexido, anotado em `/etc/lablivre/wifi_autoconnect_desligado` em cada máquina.
-- **`configs/macs_ignorar.txt`**: dispositivos conhecidos que não são do lab (roteador, PC de outra sala…) deixam de aparecer como "não cadastrados" no mapeamento. O formato é o mesmo do `macs.txt`. Veja `configs/macs_ignorar.txt.exemplo`.
+- **`configs/macs_ignorar.txt`**: dispositivos conhecidos que não são do lab (roteador, PC de outra sala…) deixam de aparecer como "não cadastrados" no mapeamento. O formato é o mesmo do `macs.txt`. Uma linha com só os 3 primeiros bytes (ex.: `9c:6b:00`) ignora todos os dispositivos daquele fabricante. No lab, isso tirou do aviso o roteador e 4 PCs ASRock de outra sala. Veja `configs/macs_ignorar.txt.exemplo`.
+- **Cores no terminal**: no mapeamento, `[ONLINE]` aparece em verde, `[OFFLINE]` em vermelho e a máquina vista pela 2ª placa (wifi) em amarelo. No Ligar, "Ligaram" fica em verde e "Não responderam" em vermelho; no diagnóstico SSH, ok em verde e erro em vermelho. As cores só aparecem no terminal: logs, portal e janelas ficam sem códigos de cor. `NO_COLOR=1` desliga.
+- **Diagnóstico SSH**: quando a máquina responde ao ping mas a porta 22 está fechada, a mensagem lembra que ela pode estar em outro sistema (Windows), além de firewall ou ssh parado.
 - **Inventário com a rede física**, para planejar manutenção:
   - coluna **Cabo** com a velocidade: em vermelho abaixo de 100 Mb/s (cabo, conector ou porta com defeito), em âmbar a 100 Mb/s e em verde a 1 Gb/s ou mais;
   - coluna **Wi-Fi** com o estado e quantas redes conectam sozinhas;
@@ -25,7 +27,7 @@ Do teste presencial no laboratório: rede das máquinas, dispositivos conhecidos
 ### Corrigido
 - **Inventário: máquinas sem coleta apareciam como se tivessem respondido**, com as colunas vazias. A coleta grava "Não coletado: <motivo>", e a página procurava "não respondeu". Agora aparecem como falha, com o motivo.
 - **Inventário: a máquina seguinte à que estava sendo processada podia sumir da tabela** (`BASH_REMATCH` sobrescrito).
-- Testes: 217 asserções.
+- Testes: 219 asserções.
 
 ---
 

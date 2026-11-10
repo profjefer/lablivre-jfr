@@ -78,14 +78,18 @@ testar() {
     printf "%-20s " "$nome"
 
     if [ "$ip" = OFFLINE ]; then
-        echo "💀 não respondeu na rede (desligada, cabo, ou em outra rede/Wi-Fi)"
+        echo "${COR_ERRO}💀 não respondeu na rede (desligada, cabo, ou em outra rede/Wi-Fi)${COR_FIM}"
         registrar "[OFFLINE]   $nome"
         ((OFF++)); return
     fi
     ping -c 1 -W 2 "$ip" >/dev/null 2>&1 && ping_ok="" || ping_ok=" (ping bloqueado)"
 
     if ! porta_aberta "$ip"; then
-        echo "🔒 $ip: porta 22 fechada$ping_ok"
+        if [ -z "$ping_ok" ]; then
+            echo "${COR_ERRO}🔒 $ip: porta 22 fechada — responde ao ping: firewall, ssh parado ou outro sistema (Windows?)${COR_FIM}"
+        else
+            echo "${COR_ERRO}🔒 $ip: porta 22 fechada$ping_ok${COR_FIM}"
+        fi
         registrar "[PORTA 22]  $nome ($ip) — sshd parado ou firewall"
         DICAS+=("$nome: na máquina, 'sudo systemctl enable --now ssh' e 'sudo ufw allow 22/tcp'")
         ((PORTA++)); return
@@ -114,13 +118,13 @@ testar() {
         else
             erro="login falhou ($(erro_ssh "$rc"); aceita: $metodos)"
         fi
-        echo "🔑 $ip: $erro"
+        echo "${COR_ERRO}🔑 $ip: $erro${COR_FIM}"
         registrar "[LOGIN]     $nome ($ip) — $erro"
         ((LOGIN++)); return
     fi
 
     if [ "$status" = ERRO_SUDO ]; then
-        echo "⚠️  $ip: entra, mas o sudo recusa a senha"
+        echo "${COR_AVISO}⚠️  $ip: entra, mas o sudo recusa a senha${COR_FIM}"
         registrar "[SUDO]      $nome ($ip) — '$LAB_USUARIO' sem sudo ou senha diferente"
         DICAS+=("$nome: 'sudo usermod -aG sudo $LAB_USUARIO' nela (mensagem, material, prova e desligar precisam de sudo)")
         ((SUDO++)); return
@@ -137,7 +141,7 @@ testar() {
     if [ "$wol" = sem-ethtool ]; then wtxt=" · ⚠️  WoL ? (sem ethtool)"; SEM_WOL+=("$nome")
     elif [[ "$wol" == *:g/* ]]; then wtxt=" · WoL ok${wolp:+ (permanente)}"; [ -z "$wolp" ] && SEM_WOL+=("$nome")
     elif [ -n "$wol" ]; then wtxt=" · ⚠️  WoL desarmado ($wol)"; SEM_WOL+=("$nome"); fi
-    echo "✅ $ip ok${ping_ok}${sessao:+ · aluno logado: $sessao}$info$wtxt"
+    echo "${COR_OK}✅ $ip ok${COR_FIM}${ping_ok}${sessao:+ · aluno logado: $sessao}$info$wtxt"
     registrar "[OK]        $nome ($ip)${ping_ok}${sessao:+ · sessão: $sessao}${info:+ · hostname: $host}"
     ((OK++))
 }

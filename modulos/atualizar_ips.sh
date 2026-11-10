@@ -243,11 +243,15 @@ for nome in "${LISTA_NOME[@]}"; do
         # Grava sempre o MAC PRINCIPAL (o Wake-on-LAN depende dele)
         # Respondeu pela 2ª placa (wifi): registra qual, para o portal mostrar
         printf "%-18s %-16s %s%s\n" "$mac" "$IP_MATCH" "$nome" "${VIA:+ (via $VIA)}" >> "$TMP_IPS"
-        echo "[ONLINE]  $nome ($IP_MATCH)${VIA:+  ← pela placa secundária $VIA (wifi?), não pelo cabo}"
+        if [ -n "$VIA" ]; then
+            echo "${COR_AVISO}[ONLINE]  $nome ($IP_MATCH)  ← pela placa secundária $VIA (wifi?), não pelo cabo${COR_FIM}"
+        else
+            echo "${COR_OK}[ONLINE]  $nome ($IP_MATCH)${COR_FIM}"
+        fi
         ((TOTAL_ONLINE++))
     else
         printf "%-18s %-16s %s\n" "$mac" "OFFLINE" "$nome" >> "$TMP_IPS"
-        echo "[OFFLINE] $nome"
+        echo "${COR_ERRO}[OFFLINE] $nome${COR_FIM}"
     fi
 done
 
@@ -264,19 +268,28 @@ echo ">> Log bruto da varredura: $LOG_SCAN"
 # configs/macs_ignorar.txt: dispositivos conhecidos que não são do lab
 # (roteador, PC de outra sala, câmera...). Formato igual ao macs.txt:
 #   9c:6b:00:1b:0d:ed   PC ASRock com MySQL (outra sala)
-declare -A IGNORAR=()
+#   9c:6b:00            todos desse fabricante (prefixo de 3 bytes)
+declare -A IGNORAR=(); IGNORAR_PREFIXOS=()
 if [ -f configs/macs_ignorar.txt ]; then
     while read -r m _; do
-        [[ "$m" =~ ^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$ ]] || continue
-        m="${m,,}"; IGNORAR["${m//-/:}"]=1
+        m="${m,,}"; m="${m//-/:}"
+        if [[ "$m" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]]; then IGNORAR["$m"]=1
+        elif [[ "$m" =~ ^([0-9a-f]{2}:){2}[0-9a-f]{2}$ ]]; then IGNORAR_PREFIXOS+=("$m")
+        fi
     done < configs/macs_ignorar.txt
 fi
+mac_ignorado() {
+    local p
+    [ -n "${IGNORAR[$1]:-}" ] && return 0
+    for p in "${IGNORAR_PREFIXOS[@]}"; do [ "${1:0:8}" = "$p" ] && return 0; done
+    return 1
+}
 DESCONHECIDOS=""; N_IGNORADOS=0
 while read -r mac ip; do
     [ -z "$mac" ] && continue
     [ "$mac" = "$MEU_MAC" ] && continue
     [ -n "${VISTO_MAC[$mac]}" ] && continue
-    [ -n "${IGNORAR[${mac,,}]:-}" ] && { ((N_IGNORADOS++)); continue; }
+    mac_ignorado "${mac,,}" && { ((N_IGNORADOS++)); continue; }
     fab="${FABRICANTE[$mac]:-}"
     [ "$ip" = "$(ip route show default 2>/dev/null | awk '{print $3; exit}')" ] && fab="roteador/gateway${fab:+ · $fab}"
     DESCONHECIDOS+="  • $mac ($ip)${fab:+  — $fab}"$'\n'

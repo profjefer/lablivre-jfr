@@ -3,10 +3,12 @@
 # O mapeamento (opção 1) avisa sobre todo MAC que responde na rede e não está
 # no macs.txt. Os MACs listados aqui deixam de aparecer nesse aviso.
 # Formato igual ao macs.txt: MAC e uma descrição (comentários com #).
+# Só os 3 primeiros bytes (ex.: 9c:6b:00) ignoram TODO aquele fabricante:
+# útil quando outra sala, na mesma rede, tem vários PCs iguais.
 #
 # Copie para configs/macs_ignorar.txt e ajuste:
 #   cp configs/macs_ignorar.txt.exemplo configs/macs_ignorar.txt
 #
 # MAC                 DESCRIÇÃO
 00:04:96:35:d8:63     roteador/gateway (Extreme Networks)
-9c:6b:00:1b:0d:ed     PC ASRock com MySQL (não é do lab)
+9c:6b:00              PCs ASRock (outra sala, mesma rede)

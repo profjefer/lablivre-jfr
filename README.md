@@ -115,6 +115,7 @@ d0:94:66:e1:81:57    lula-molusco
 - **MACs que respondem na rede mas não estão no arquivo** vão para `logs/macs_desconhecidos.log`.
 - **Dispositivos conhecidos que não são do lab** (roteador, PC de outra sala…): coloque-os em
   `configs/macs_ignorar.txt`, no mesmo formato, para não aparecerem mais nesse aviso.
+  Uma linha com só os 3 primeiros bytes (ex.: `9c:6b:00`) ignora todos daquele fabricante.
 
 ---
 
@@ -250,7 +251,7 @@ Para alterar, use a opção **99** (ela preserva as outras variáveis) ou edite 
 bash tests/run_tests.sh
 ```
 Os testes rodam com comandos simulados (SSH, sudo, iptables, systemd…), então não tocam a
-rede nem o sistema. São 217 asserções na 4.2.8.
+rede nem o sistema. São 219 asserções na 4.2.8.
 
 ---
 

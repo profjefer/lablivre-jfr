@@ -126,9 +126,9 @@ for nome in "${!NOMES_ALVO[@]}"; do
     fi
 done
 echo "--------------------------------------------------------"
-echo "🟢 Ligaram (${#LIGARAM[@]}): $(printf '%s\n' "${LIGARAM[@]}" | sort | paste -sd' ' -)"
+echo "${COR_OK}🟢 Ligaram (${#LIGARAM[@]}): $(printf '%s\n' "${LIGARAM[@]}" | sort | paste -sd' ' -)${COR_FIM}"
 if [ "${#NAO[@]}" -gt 0 ]; then
-    echo "🔴 Não responderam (${#NAO[@]}): $(printf '%s\n' "${NAO[@]}" | sort | paste -sd' ' -)"
+    echo "${COR_ERRO}🔴 Não responderam (${#NAO[@]}): $(printf '%s\n' "${NAO[@]}" | sort | paste -sd' ' -)${COR_FIM}"
     echo ""
     echo "   Causas mais comuns, nesta ordem:"
     echo "   1. Sem energia: filtro de linha/estabilizador desligado, cabo de força."

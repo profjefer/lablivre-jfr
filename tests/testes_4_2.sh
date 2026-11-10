@@ -518,6 +518,11 @@ printf '# conhecidos\n9C:6B:00:1B:0D:ED   PC de outra sala\n' > "$P/configs/macs
 SAIDA=$(cd "$P" && PATH="$B:/usr/bin:/bin" ARPSCAN="$T42/arp.txt" bash modulos/atualizar_ips.sh < /dev/null 2>&1)
 assert_ok "MACs ignorados: não aparecem como desconhecidos" "! grep -q '9c:6b:00:1b:0d:ed' <<< \"\$SAIDA\" && grep -q '00:11:22:33:44:55' <<< \"\$SAIDA\""
 assert_ok "MACs ignorados: o mapeamento diz quantos foram ignorados" "grep -q '1 dispositivo(s) de configs/macs_ignorar.txt' <<< \"\$SAIDA\""
+printf '10.9.0.254\t00:11:22:33:44:55\tExtreme\n10.9.0.77\t9c:6b:00:1b:0d:ed\tASRock\n10.9.0.78\t9c:6b:00:1b:0a:69\tASRock\n' > "$T42/arp.txt"
+printf '9c:6b:00   PCs ASRock de outra sala\n' > "$P/configs/macs_ignorar.txt"
+SAIDA=$(cd "$P" && PATH="$B:/usr/bin:/bin" ARPSCAN="$T42/arp.txt" bash modulos/atualizar_ips.sh < /dev/null 2>&1)
+assert_ok "MACs ignorados: prefixo de 3 bytes ignora o fabricante todo" "! grep -q '9c:6b:00' <<< \"\$SAIDA\" && grep -q '2 dispositivo(s) de configs/macs_ignorar.txt' <<< \"\$SAIDA\""
+assert_ok "cores: saída para arquivo/pipe sai sem códigos de cor" "! grep -q \$'\\e\\[' <<< \"\$SAIDA\""
 rm -f "$P/configs/macs_ignorar.txt"
 
 printf '%s\n' "MÁQUINA: pc02 (10.9.0.2 | aa)" "CABO: 100 Mb/s full em en2" "WIFI: conectado em UFPR · 2 rede(s) automática(s) · wl2 x" \

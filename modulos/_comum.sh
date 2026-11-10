@@ -25,6 +25,15 @@ CONF_FILE="$LAB_RAIZ/configs/lablivre.conf"
 ARQUIVO_MACS="$LAB_RAIZ/configs/macs.txt"
 ARQUIVO_IPS="$LAB_RAIZ/ips_atuais.txt"
 
+# Cores no terminal: verde = online/ok, vermelho = offline/erro, amarelo =
+# aviso. Só quando a saída é um terminal de verdade: arquivos de log, portal
+# e janelas do zenity ficam sem códigos de cor. NO_COLOR=1 desliga.
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${LAB_GUI:-0}" != 1 ] && [ "${TERM:-dumb}" != dumb ]; then
+    COR_OK=$'\e[1;32m'; COR_ERRO=$'\e[1;31m'; COR_AVISO=$'\e[1;33m'; COR_FIM=$'\e[0m'
+else
+    COR_OK=""; COR_ERRO=""; COR_AVISO=""; COR_FIM=""
+fi
+
 # Módulos gráficos: esconde o ruído inofensivo do GTK/zenity no terminal
 # (avisos de opção descontinuada, "GtkDialog mapped without a transient
 # parent", GLib-CRITICAL em sessão SSH -X). Erros de verdade continuam.
